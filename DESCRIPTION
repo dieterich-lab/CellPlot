@@ -1,0 +1,9 @@
+Package: cellplot
+Type: Package
+Title: What the package does (short line)
+Version: 1.0
+Date: 2015-04-21
+Author: RS
+Maintainer: RS <RS@x.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
