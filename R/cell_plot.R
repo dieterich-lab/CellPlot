@@ -14,6 +14,8 @@
 #' 
 #' @param cell.colorFunction Function to generate the color spectrum for the cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).
 #'
+#' @param cell.col.inf Character vector of length two, with colors for \code{-Inf} and \code{Inf} values.
+#'
 #' @param space Scaling factor for spacing between bars.
 #' 
 #' @param x.mar Numeric vector defining the inside margin to the left and right of the main plot. Defaults to c(0.2,0.1).
@@ -40,6 +42,8 @@
 #' @param xlab Label for x-axis.
 #'
 #' @param key.lab Label for color key.
+#'
+#' @param key.n Number of legend boxes for the color key. Minimum is 3 (5 when infinite values are present).
 #'
 #' @param spacers Numeric vector. Inserts empty space after the specified positions to visually group bars.
 #'
@@ -72,8 +76,13 @@
 
 #' @rdname cell.plot
 #' @export
-cell.plot = function( x, cells, lab.col=NULL, cell.colorFunction=colorRampPalette( c("blue","white","red") ), space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.tick=NULL, 
-                      xlab.yoffset = 0.08, sym=T, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="", key=T, key.lab="Color Key", spacers=NULL, scaleTo=NULL, ... ) {
+cell.plot = function(
+	x, cells, lab.col=NULL, cell.colorFunction=colorRampPalette( c("blue","white","red") ), 
+	cell.col.inf = c("#333333", "#666666"),
+	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.tick=NULL,
+	xlab.yoffset = 0.08, sym=T, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="", 
+	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... ) 
+{
   par(xpd=NA)
   if (is.null(xlab.tick)) { xlab.tick = round( max(x) / 10, digits = 1) }
   ticksize = xlab.tick
@@ -95,10 +104,17 @@ cell.plot = function( x, cells, lab.col=NULL, cell.colorFunction=colorRampPalett
   yspace = space * ygap
   
   celldata = unlist(cells)
-  cellbound = c( min(celldata), max(celldata) )
+	cellinf <- is.infinite(celldata)
+  cellbound = range(celldata[!cellinf])
   if (sym) { cellbound = rep( max(abs(cellbound)),2 ) * c(-1,1) }
   cellcolmap = seq( cellbound[1], cellbound[2], length.out=101 )
   names(cellcolmap) = cell.colorFunction(101)
+	if (any(cellinf)) { 
+		if (key.n < 5) stop("key.n must be >4 when infinite values are present") 
+	} else {
+		if (key.n < 3) stop("key.n must be >2") 
+	}
+
   
   labvec = rep("",length(x))
   if (!is.null(names(x))) { labvec=names(x) }
@@ -107,25 +123,35 @@ cell.plot = function( x, cells, lab.col=NULL, cell.colorFunction=colorRampPalett
   
   # do the actual plotting
   plot.new()
-  for (i in 1:length(x) ) {
-    xsteps = seq( xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1], length.out=(length(cells[[i]])+1) )
+  for (i in 1:length(x)) {
+		bar.n <- length(cells[[i]])
+    xsteps = seq(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1], 
+								 length.out=(bar.n+1))
     if (is.null(cells)) { xsteps = c(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1]) }
-    
-    text( xbound[1], ysteps[i+1]+ygap*0.5, labels=labvec[i], pos=2, cex=lab.cex, col = colvec[i] )        # row labels
-    
+		# row labels
+    text( xbound[1], ysteps[i+1]+ygap*0.5, labels=labvec[i], pos=2, cex=lab.cex, col = colvec[i] )       
     if(cell.sort) { cells[[i]] = sort(cells[[i]]) }
-    this.n = length( cells[[i]] )
-    
-    text( xsteps[length(xsteps)], ysteps[i+1]+ygap*0.5, pos=4, cex=lab.cex, labels=length(cells[[i]]) )   # number of cells labels
-    
-    for ( j in 1:length(cells[[i]]) ) {
-      this.col = names(cellcolmap)[ which(cellcolmap >= cells[[i]][j])[1] ]     # map colors to cell values
-      this.cell.lwd = ifelse( length(cells[[i]]) < cell.limit, cell.lwd, 0)     # omit cell borders if the bar has more than cell.limit cells
-      this.border = ifelse( length(cells[[i]]) < cell.limit, "black", this.col)
-      rect( xsteps[j], ysteps[i+1]+ygap-yspace, xsteps[j+1], ysteps[i+1]+yspace, col=this.col, lwd=this.cell.lwd, border=this.border )  # make little boxes
-    }
-    
-    rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer ) # and another box around the whole bar
+		bar.order <- order(cells[[i]])
+		# number of cells labels
+    text( xsteps[length(xsteps)], ysteps[i+1]+ygap*0.5, pos=4, cex=lab.cex, labels=bar.n)
+		# map colors to cell values
+		bar.val <- cells[[i]]
+		bar.inf <- is.infinite(bar.val)
+		bar.inf.pos <- bar.inf & bar.val > 0
+		bar.inf.neg <- bar.inf & bar.val < 0
+		bar.i <- sapply(bar.val, function(bi) which.min(abs(cellcolmap - bi)))
+		bar.col <- names(cellcolmap)[bar.i]
+		bar.shade <- ifelse(bar.inf, 10L, NA_integer_)
+		bar.col[bar.inf.pos] <- cell.col.inf[1]
+		bar.col[bar.inf.pos] <- cell.col.inf[2]
+		bar.cell.lwd <- ifelse( bar.n < cell.limit, cell.lwd, 0)
+		# omit cell borders if the bar has more than cell.limit cells
+		bar.border <- if (bar.n < cell.limit) rep("black",bar.n) else bar.col
+		# make little boxes
+		rect(xsteps[-(bar.n+1)], ysteps[i+1]+ygap-yspace, xsteps[-1], ysteps[i+1]+yspace,
+				 col = bar.col, lwd = bar.cell.lwd, border = bar.border)#, density = bar.shade) # works only whith lwd >0
+		# and another box around the whole bar
+    rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer ) 
   }
   
   conversion = (xbound[2]-xbound[1])/(max(x)-min(0,min(x)) )
@@ -134,29 +160,35 @@ cell.plot = function( x, cells, lab.col=NULL, cell.colorFunction=colorRampPalett
   
   axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
   title( ... )
-  text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = xlab.cex)*2, labels=xlab, pos=3, cex=xdes.cex )      # XAXIS DESIGNATION
+	# XAXIS DESIGNATION
+  text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = xlab.cex)*2, labels=xlab, pos=3, cex=xdes.cex )      
   segments( xbound[1], ybound[1]+0.015, xbound[1], ybound[2], lwd=cell.outer)
   
-  
   # color legend
-  #lc = c( 0.8,ybound[2]-0.02-yspace*2,0,ybound[2]-yspace*2 )
   if (key) {
     lc = c( 0.8,ybound[2]-ygap-yspace*2,0,ybound[2]-yspace*2 )
-    
-    absmax = round( max(abs(celldata)), digits=2)
-    lc.xsteps = seq( xbound[1], xbound[2], length.out=12)
+    absmax = max(abs(celldata[!cellinf]))
+		lc.min <- min(celldata[!cellinf])
+		lc.max <- max(celldata[!cellinf])
+		cellcolmap <- cellcolmap[lc.min <= cellcolmap & cellcolmap <= lc.max]
+    lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
     lc.xgap = lc.xsteps[1] - lc.xsteps[2]
-    lc.range = round( seq( -absmax, absmax, length.out=11 ), digits=1)
-    for (k in 1:length(lc.range)) {
-      lc.col = names(cellcolmap)[ which(cellcolmap >= lc.range[k])[1] ]
-      if (is.na(lc.col)) { lc.col = names(cellcolmap[length(cellcolmap)]) }
-      rect( lc.xsteps[k]-lc.xgap*0.1, lc[2], lc.xsteps[k+1]+lc.xgap*0.1, lc[4], col=lc.col, lwd=cell.outer )  # COLOR LEGEND BOXES
-      text( (lc.xsteps[k]+lc.xsteps[k+1])/2, lc[2], pos=1, labels=lc.range[k], cex=xlab.cex, font=2 )         # COLOR LEGEND TEXT
-    }
-    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )  # COLOR LEGEND DESIGNATION
+		if (any(cellinf)) {
+			#lc.range <- c(-Inf, seq( -absmax, absmax, length.out=key.n-2), Inf)
+			lc.range <- c(-Inf, seq( lc.min, lc.max, length.out=key.n-2), Inf)
+			lc.col <- c(cell.col.inf[1], names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n-2)], cell.col.inf[2])
+		} else {
+			#lc.range = seq( -absmax, absmax, length.out=key.n )
+			lc.range = seq( lc.min, lc.max, length.out=key.n )
+			lc.col <- names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n)]
+		}
+		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
+    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=xlab.cex, font=2 )         
+    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )  
   }
   par(xpd=T)
 }
 
 
 # I am a change
+

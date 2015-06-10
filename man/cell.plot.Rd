@@ -6,11 +6,12 @@
 \usage{
 cell.plot(x, cells, lab.col = NULL,
   cell.colorFunction = colorRampPalette(c("blue", "white", "red")),
-  space = 0.1, x.mar = c(0.2, 0.1), y.mar = c(0.08, 0), lab.cex = 1,
-  xdes.cex = 1, xlab.cex = 1, xlab.tick = NULL, xlab.yoffset = 0.08,
-  sym = T, cell.lwd = 1, cell.outer = 2, cell.sort = T,
-  cell.limit = 50, xlab = "", key = T, key.lab = "Color Key",
-  spacers = NULL, scaleTo = NULL, ...)
+  cell.col.inf = c("#333333", "#666666"), space = 0.1, x.mar = c(0.2,
+  0.1), y.mar = c(0.08, 0), lab.cex = 1, xdes.cex = 1, xlab.cex = 1,
+  xlab.tick = NULL, xlab.yoffset = 0.08, sym = T, cell.lwd = 1,
+  cell.outer = 2, cell.sort = T, cell.limit = 50, xlab = "", key = T,
+  key.lab = "Color Key", key.n = 11, spacers = NULL, scaleTo = NULL,
+  ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -20,6 +21,8 @@ cell.plot(x, cells, lab.col = NULL,
 \item{lab.col}{Vector of color names. Must be the same length as x. Defaults to black.}
 
 \item{cell.colorFunction}{Function to generate the color spectrum for the cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).}
+
+\item{cell.col.inf}{Character vector of length two, with colors for \code{-Inf} and \code{Inf} values.}
 
 \item{space}{Scaling factor for spacing between bars.}
 
@@ -47,6 +50,8 @@ Defaults to max(x)/10.}
 \item{xlab}{Label for x-axis.}
 
 \item{key.lab}{Label for color key.}
+
+\item{key.n}{Number of legend boxes for the color key. Minimum is 3 (5 when infinite values are present).}
 
 \item{spacers}{Numeric vector. Inserts empty space after the specified positions to visually group bars.}
 
