@@ -105,7 +105,8 @@ cell.plot = function(
   
   celldata = unlist(cells)
 	cellinf <- is.infinite(celldata)
-  cellbound = range(celldata[!cellinf])
+	cellmis <- is.na(celldata)
+  cellbound = range(celldata[!cellinf & !cellmis])
   if (sym) { cellbound = rep( max(abs(cellbound)),2 ) * c(-1,1) }
   cellcolmap = seq( cellbound[1], cellbound[2], length.out=101 )
   names(cellcolmap) = cell.colorFunction(101)
@@ -125,6 +126,7 @@ cell.plot = function(
   plot.new()
   for (i in 1:length(x)) {
 		bar.n <- length(cells[[i]])
+		bar.nreal <- sum(!is.na(cells[[i]]))
     xsteps = seq(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1], 
 								 length.out=(bar.n+1))
     if (is.null(cells)) { xsteps = c(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1]) }
@@ -133,9 +135,10 @@ cell.plot = function(
     if(cell.sort) { cells[[i]] = sort(cells[[i]]) }
 		bar.order <- order(cells[[i]])
 		# number of cells labels
-    text( xsteps[length(xsteps)], ysteps[i+1]+ygap*0.5, pos=4, cex=lab.cex, labels=bar.n)
+    text( xsteps[length(xsteps)], ysteps[i+1]+ygap*0.5, pos=4, cex=lab.cex, labels=bar.nreal)
 		# map colors to cell values
 		bar.val <- cells[[i]]
+		if (bar.nreal < 1) bar.val <- 0
 		bar.inf <- is.infinite(bar.val)
 		bar.inf.pos <- bar.inf & bar.val > 0
 		bar.inf.neg <- bar.inf & bar.val < 0
@@ -167,9 +170,9 @@ cell.plot = function(
   # color legend
   if (key) {
     lc = c( 0.8,ybound[2]-ygap-yspace*2,0,ybound[2]-yspace*2 )
-    absmax = max(abs(celldata[!cellinf]))
-		lc.min <- min(celldata[!cellinf])
-		lc.max <- max(celldata[!cellinf])
+    absmax = max(abs(celldata[!cellinf & !cellmis]))
+		lc.min <- min(celldata[!cellinf & !cellmis])
+		lc.max <- max(celldata[!cellinf & !cellmis])
 		cellcolmap <- cellcolmap[lc.min <= cellcolmap & cellcolmap <= lc.max]
     lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
     lc.xgap = lc.xsteps[1] - lc.xsteps[2]
