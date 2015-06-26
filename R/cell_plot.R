@@ -16,7 +16,7 @@
 #' @param lab.col Vector of color names. Must be the same length as x. Defaults
 #' to black.
 #'
-#' @param cell.colorFunction Function to generate the color spectrum for the
+#' @param cell.col.fun Function to generate the color spectrum for the
 #' cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).
 #'
 #' @param cell.col.inf Character vector of length two, with colors for
@@ -93,7 +93,7 @@
 #' @rdname cell.plot
 #' @export
 cell.plot = function(
-	x, cells, lab.col=NULL, cell.colorFunction=colorRampPalette( c("blue","white","red") ),
+	x, cells, lab.col=NULL, cell.col.fun=colorRampPalette( c("blue","white","red") ),
 	cell.col.inf = c("#333333", "#666666"),
 	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
 	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
@@ -125,7 +125,7 @@ cell.plot = function(
   cellbound = range(celldata[!cellinf & !cellmis])
   if (sym) { cellbound = rep( max(abs(cellbound)),2 ) * c(-1,1) }
   cellcolmap = seq( cellbound[1], cellbound[2], length.out=101 )
-  names(cellcolmap) = cell.colorFunction(101)
+  names(cellcolmap) = cell.col.fun(101)
 	if (any(cellinf)) {
 		if (key.n < 5) stop("key.n must be >4 when infinite values are present")
 	} else {
