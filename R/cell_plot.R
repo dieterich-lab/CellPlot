@@ -61,6 +61,9 @@
 #' bars. Used to ensure visual consistency across different plots. Defaults to
 #' \code{NULL}, i.e. the plotting area is scaled to fit.
 #'
+#' @param sym Logical, if \code{TRUE} create a symmetric color range despite if
+#' the absolute values of the minimum and maximum in the cells value differ.
+#'
 #' @param \dots Arguments passed through to the title() function. E.g.
 #' main = "Plot title".
 #'
@@ -93,7 +96,7 @@ cell.plot = function(
 	x, cells, lab.col=NULL, cell.colorFunction=colorRampPalette( c("blue","white","red") ),
 	cell.col.inf = c("#333333", "#666666"),
 	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-	xlab.yoffset = 0.08, sym=T, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
+	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
 	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... )
 {
   par(xpd=NA)
