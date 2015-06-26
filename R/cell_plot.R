@@ -36,8 +36,7 @@
 #'
 #' @param xlab.cex Scaling factor for x-label text size.
 #'
-#' @param xlab.tick Spacing between consecutive tickmarks, in the same units as
-#' used for x. Defaults to max(x)/10.
+#' @param xlab.ticks Number of ticks for the x-axis.
 #'
 #' @param cell.lwd Size of the border of individual cells. Defaults to 1.
 #'
@@ -82,7 +81,7 @@
 #' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 #'
 #' ## Plot with spacers
-#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.tick = 0.5,
+#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 0.5,
 #'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 #' }
 #'
@@ -93,13 +92,13 @@
 cell.plot = function(
 	x, cells, lab.col=NULL, cell.colorFunction=colorRampPalette( c("blue","white","red") ),
 	cell.col.inf = c("#333333", "#666666"),
-	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.tick=NULL,
+	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
 	xlab.yoffset = 0.08, sym=T, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
 	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... )
 {
   par(xpd=NA)
-  if (is.null(xlab.tick)) { xlab.tick = round( max(x) / 10, digits = 1) }
-  ticksize = xlab.tick
+  #if (is.null(xlab.ticks)) { xlab.ticks = round( max(x) / 10, digits = 1) }
+  #ticksize = xlab.ticks
   ybound = c(1,0) + c(-1,1)*y.mar
 
   # scale bar area height to uniform scaleTo bars -- if it isn't provided, scale to fit
@@ -172,8 +171,10 @@ cell.plot = function(
   }
 
   conversion = (xbound[2]-xbound[1])/(max(x)-min(0,min(x)) )
-  axis.at = seq(xbound[1], xbound[2], by=conversion*ticksize )
-  axis.lab = round( seq( min(0, min(x)), (length(axis.at)-1)*ticksize, length.out=length(axis.at) ), digits=1 )
+  #axis.at = seq(xbound[1], xbound[2], by=conversion*ticksize )
+  #axis.lab = round( seq( min(0, min(x)), (length(axis.at)-1)*ticksize, length.out=length(axis.at) ), digits=1 )
+  axis.at <- seq(xbound[1], xbound[2], length.out = xlab.ticks)
+  axis.lab <- round(seq(min(0,min(x)), max(x), length.out = xlab.ticks),1)
 
   axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
   title( ... )
@@ -187,6 +188,7 @@ cell.plot = function(
     absmax = max(abs(celldata[!cellinf & !cellmis]))
 		lc.min <- min(celldata[!cellinf & !cellmis])
 		lc.max <- max(celldata[!cellinf & !cellmis])
+		cellcolmap.center <- cellcolmap[51]
 		cellcolmap <- cellcolmap[lc.min <= cellcolmap & cellcolmap <= lc.max]
     lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
     lc.xgap = lc.xsteps[1] - lc.xsteps[2]
@@ -199,6 +201,12 @@ cell.plot = function(
 			lc.range = seq( lc.min, lc.max, length.out=key.n )
 			lc.col <- names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n)]
 		}
+    # normalize center zero color and text
+    if (key.n %% 2 > 0 && lc.min < 0 && lc.max > 0) {
+      i.center <- mean(c(1,key.n))
+      lc.col[i.center] <- names(cellcolmap.center)
+      lc.range[i.center] <- 0
+    }
 		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
     text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=xlab.cex, font=2 )
     text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )
