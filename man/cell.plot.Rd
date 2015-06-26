@@ -5,10 +5,10 @@
 \title{Cell Plot}
 \usage{
 cell.plot(x, cells, lab.col = NULL,
-  cell.colorFunction = colorRampPalette(c("blue", "white", "red")),
+  cell.col.fun = colorRampPalette(c("blue", "white", "red")),
   cell.col.inf = c("#333333", "#666666"), space = 0.1, x.mar = c(0.2,
   0.1), y.mar = c(0.08, 0), lab.cex = 1, xdes.cex = 1, xlab.cex = 1,
-  xlab.tick = NULL, xlab.yoffset = 0.08, sym = T, cell.lwd = 1,
+  xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE, cell.lwd = 1,
   cell.outer = 2, cell.sort = T, cell.limit = 50, xlab = "", key = T,
   key.lab = "Color Key", key.n = 11, spacers = NULL, scaleTo = NULL,
   ...)
@@ -18,17 +18,22 @@ cell.plot(x, cells, lab.col = NULL,
 
 \item{cells}{List of vectors. Must be the same length as x.}
 
-\item{lab.col}{Vector of color names. Must be the same length as x. Defaults to black.}
+\item{lab.col}{Vector of color names. Must be the same length as x. Defaults
+to black.}
 
-\item{cell.colorFunction}{Function to generate the color spectrum for the cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).}
+\item{cell.col.fun}{Function to generate the color spectrum for the
+cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).}
 
-\item{cell.col.inf}{Character vector of length two, with colors for \code{-Inf} and \code{Inf} values.}
+\item{cell.col.inf}{Character vector of length two, with colors for
+\code{-Inf} and \code{Inf} values.}
 
 \item{space}{Scaling factor for spacing between bars.}
 
-\item{x.mar}{Numeric vector defining the inside margin to the left and right of the main plot. Defaults to c(0.2,0.1).}
+\item{x.mar}{Numeric vector defining the inside margin to the left and right
+of the main plot. Defaults to c(0.2,0.1).}
 
-\item{y.mar}{Numeric vector defining the inside margin to the top and bottom of the main plot. Defaults to c(0.08,0).}
+\item{y.mar}{Numeric vector defining the inside margin to the top and bottom
+of the main plot. Defaults to c(0.08,0).}
 
 \item{lab.cex}{Scaling factor for label text size.}
 
@@ -36,8 +41,10 @@ cell.plot(x, cells, lab.col = NULL,
 
 \item{xlab.cex}{Scaling factor for x-label text size.}
 
-\item{xlab.tick}{Spacing between consecutive tickmarks, in the same units as used for x.
-Defaults to max(x)/10.}
+\item{xlab.ticks}{Number of ticks for the x-axis.}
+
+\item{sym}{Logical, if \code{TRUE} create a symmetric color range despite if
+the absolute values of the minimum and maximum in the cells value differ.}
 
 \item{cell.lwd}{Size of the border of individual cells. Defaults to 1.}
 
@@ -45,25 +52,33 @@ Defaults to max(x)/10.}
 
 \item{cell.sort}{Should cell values be sorted? Defaults to TRUE.}
 
-\item{cell.limit}{Number of cells above which separators between cells are omitted. Defaults to 50.}
+\item{cell.limit}{Number of cells above which separators between cells are
+omitted. Defaults to 50.}
 
 \item{xlab}{Label for x-axis.}
 
 \item{key.lab}{Label for color key.}
 
-\item{key.n}{Number of legend boxes for the color key. Minimum is 3 (5 when infinite values are present).}
+\item{key.n}{Number of legend boxes for the color key. Minimum is 3 (5 when
+infinite values are present).}
 
-\item{spacers}{Numeric vector. Inserts empty space after the specified positions to visually group bars.}
+\item{spacers}{Numeric vector. Inserts empty space after the specified
+positions to visually group bars.}
 
-\item{scaleTo}{Scale the plotting area to accomodate exactly this number of bars. Used to ensure visual consistency across different plots.
-Defaults to NULL, i.e. the plotting area is scaled to fit.}
+\item{scaleTo}{Scale the plotting area to accomodate exactly this number of
+bars. Used to ensure visual consistency across different plots. Defaults to
+\code{NULL}, i.e. the plotting area is scaled to fit.}
 
-\item{\dots}{Arguments passed through to the title() function. E.g. main = "Plot title".}
+\item{\dots}{Arguments passed through to the title() function. E.g.
+main = "Plot title".}
 }
 \description{
-Plots a horizontal barchart of strictly positive values in x. For each entry, a vector of additional values needs to be provided in a list.
-The additional values are plotted as cells subdividing the length of the corresponding bar. A typical usage scenario is plotting the
-enrichment of Gene Ontology terms, with individual cells reflecting the differential regulation of the constituent genes.
+Plots a horizontal barchart of strictly positive values in x. For each
+entry, a vector of additional values needs to be provided in a list. The
+additional values are plotted as cells subdividing the length of the
+corresponding bar. A typical usage scenario is plotting the enrichment of
+Gene Ontology terms, with individual cells reflecting the differential
+regulation of the constituent genes.
 }
 \details{
 Details
@@ -83,7 +98,8 @@ xc = round( runif(16, min=21, max=100) )
 for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 
 ## Plot with spacers
-cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.tick = 0.5, main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 0.5,
+  main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 }
 }
 \author{
