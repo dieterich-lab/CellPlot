@@ -160,15 +160,18 @@ cell.plot = function(
 		bar.inf.neg <- bar.inf & bar.val < 0
 		bar.i <- sapply(bar.val, function(bi) which.min(abs(cellcolmap - bi)))
 		bar.col <- names(cellcolmap)[bar.i]
-		bar.shade <- ifelse(bar.inf, 10L, NA_integer_)
+		#bar.shade <- ifelse(bar.inf, 10L, NA_integer_)
+		bar.shade <- ifelse(bar.inf, 10L, 0)
 		bar.col[bar.inf.pos] <- cell.col.inf[1]
 		bar.col[bar.inf.pos] <- cell.col.inf[2]
-		bar.cell.lwd <- ifelse( bar.n < cell.limit, cell.lwd, 0)
+		bar.cell.lwd <- ifelse( bar.n < cell.limit, cell.lwd, NA)
 		# omit cell borders if the bar has more than cell.limit cells
 		bar.border <- if (bar.n < cell.limit) rep("black",bar.n) else bar.col
 		# make little boxes
 		rect(xsteps[-(bar.n+1)], ysteps[i+1]+ygap-yspace, xsteps[-1], ysteps[i+1]+yspace,
-				 col = bar.col, lwd = bar.cell.lwd, border = bar.border)#, density = bar.shade) # works only whith lwd >0
+				 col = bar.col, lwd = bar.cell.lwd, border = bar.border) # works only whith lwd >0
+		rect(xsteps[-(bar.n+1)], ysteps[i+1]+ygap-yspace, xsteps[-1], ysteps[i+1]+yspace,
+		     col = "black", lwd = 1, density = bar.shade) # works only whith lwd >0
 		# and another box around the whole bar
     rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer )
   }
@@ -195,10 +198,13 @@ cell.plot = function(
 		cellcolmap <- cellcolmap[lc.min <= cellcolmap & cellcolmap <= lc.max]
     lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
     lc.xgap = lc.xsteps[1] - lc.xsteps[2]
-		if (any(cellinf)) {
+		
+		lc.density <- rep(20, key.n)
+    if (any(cellinf)) {
 			#lc.range <- c(-Inf, seq( -absmax, absmax, length.out=key.n-2), Inf)
 			lc.range <- c(-Inf, seq( lc.min, lc.max, length.out=key.n-2), Inf)
 			lc.col <- c(cell.col.inf[1], names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n-2)], cell.col.inf[2])
+      lc.density[c(1,length(lc.density))] = 3
 		} else {
 			#lc.range = seq( -absmax, absmax, length.out=key.n )
 			lc.range = seq( lc.min, lc.max, length.out=key.n )
@@ -211,6 +217,7 @@ cell.plot = function(
       lc.range[i.center] <- 0
     }
 		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
+		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=cell.outer, density = lc.density, border=NA )
     text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=xlab.cex, font=2 )
     text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )
   }
