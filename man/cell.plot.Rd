@@ -6,9 +6,9 @@
 \usage{
 cell.plot(x, cells, lab.col = NULL,
   cell.col.fun = colorRampPalette(c("blue", "white", "red")),
-  cell.col.inf = c("#333333", "#666666"), space = 0.1, x.mar = c(0.2,
-  0.1), y.mar = c(0.08, 0), lab.cex = 1, xdes.cex = 1, xlab.cex = 1,
-  xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE, cell.lwd = 1,
+  inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0.1),
+  y.mar = c(0.08, 0), lab.cex = 1, xdes.cex = 1, xlab.cex = 1,
+  xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE, cell.lwd = 2,
   cell.outer = 2, cell.sort = T, cell.limit = 50, xlab = "", key = T,
   key.lab = "Color Key", key.n = 11, spacers = NULL, scaleTo = NULL,
   ...)
@@ -24,8 +24,7 @@ to black.}
 \item{cell.col.fun}{Function to generate the color spectrum for the
 cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).}
 
-\item{cell.col.inf}{Character vector of length two, with colors for
-\code{-Inf} and \code{Inf} values.}
+\item{inf.shading}{Numeric. Density of shading lines for infinite values. Defaults to 30/cell.lwd.}
 
 \item{space}{Scaling factor for spacing between bars.}
 
@@ -96,9 +95,11 @@ xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
 cells = list()
 xc = round( runif(16, min=21, max=100) )
 for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
+cells[[9]][1:2] = Inf
+cells[[9]][3] = -Inf
 
 ## Plot with spacers
-cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 0.5,
+cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 }
 }

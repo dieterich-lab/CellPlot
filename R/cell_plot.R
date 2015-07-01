@@ -19,8 +19,7 @@
 #' @param cell.col.fun Function to generate the color spectrum for the
 #' cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).
 #'
-#' @param cell.col.inf Character vector of length two, with colors for
-#' \code{-Inf} and \code{Inf} values.
+#' @param inf.shading Numeric. Density of shading lines for infinite values. Defaults to 30/cell.lwd.
 #'
 #' @param space Scaling factor for spacing between bars.
 #'
@@ -82,9 +81,11 @@
 #' cells = list()
 #' xc = round( runif(16, min=21, max=100) )
 #' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
+#' cells[[9]][1:2] = Inf
+#' cells[[9]][3] = -Inf
 #'
 #' ## Plot with spacers
-#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 0.5,
+#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
 #'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 #' }
 #'
@@ -94,12 +95,12 @@
 #' @export
 cell.plot = function(
 	x, cells, lab.col=NULL, cell.col.fun=colorRampPalette( c("blue","white","red") ),
-	cell.col.inf = c("#333333", "#666666"),
-	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=1, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
+	inf.shading = 30/cell.lwd,	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
+	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
 	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... )
 {
   par(xpd=NA)
+  cell.col.inf = cell.col.fun(2)
   #if (is.null(xlab.ticks)) { xlab.ticks = round( max(x) / 10, digits = 1) }
   #ticksize = xlab.ticks
   ybound = c(1,0) + c(-1,1)*y.mar
@@ -161,17 +162,22 @@ cell.plot = function(
 		bar.i <- sapply(bar.val, function(bi) which.min(abs(cellcolmap - bi)))
 		bar.col <- names(cellcolmap)[bar.i]
 		#bar.shade <- ifelse(bar.inf, 10L, NA_integer_)
-		bar.shade <- ifelse(bar.inf, 10L, 0)
-		bar.col[bar.inf.pos] <- cell.col.inf[1]
+		
+		#bar.cell.lwd <- ifelse( bar.n < cell.limit, cell.lwd, NA)
+    bar.cell.lwd = cell.lwd
+		bar.shade <- ifelse(bar.inf, inf.shading, 0)
+		bar.col.inf = bar.col
+    if (bar.n < cell.limit) { bar.col.inf = "black" } else { bar.col.inf[bar.inf] = "black" }
+		bar.col[bar.inf.neg] <- cell.col.inf[1]
 		bar.col[bar.inf.pos] <- cell.col.inf[2]
-		bar.cell.lwd <- ifelse( bar.n < cell.limit, cell.lwd, NA)
+    
 		# omit cell borders if the bar has more than cell.limit cells
-		bar.border <- if (bar.n < cell.limit) rep("black",bar.n) else bar.col
+		# bar.border <- if (bar.n < cell.limit) rep("black",bar.n) else bar.col
 		# make little boxes
 		rect(xsteps[-(bar.n+1)], ysteps[i+1]+ygap-yspace, xsteps[-1], ysteps[i+1]+yspace,
-				 col = bar.col, lwd = bar.cell.lwd, border = bar.border) # works only whith lwd >0
+				 col = bar.col, lwd = bar.cell.lwd, border = NA) # works only whith lwd >0
 		rect(xsteps[-(bar.n+1)], ysteps[i+1]+ygap-yspace, xsteps[-1], ysteps[i+1]+yspace,
-		     col = "black", lwd = 1, density = bar.shade) # works only whith lwd >0
+		     col = bar.col.inf, lwd = bar.cell.lwd, density = bar.shade) # works only whith lwd >0
 		# and another box around the whole bar
     rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer )
   }
@@ -183,6 +189,7 @@ cell.plot = function(
   axis.lab <- round(seq(min(0,min(x)), max(x), length.out = xlab.ticks),1)
 
   axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
+  
   title( ... )
 	# XAXIS DESIGNATION
   text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = xlab.cex)*2, labels=xlab, pos=3, cex=xdes.cex )
@@ -199,12 +206,12 @@ cell.plot = function(
     lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
     lc.xgap = lc.xsteps[1] - lc.xsteps[2]
 		
-		lc.density <- rep(20, key.n)
+		lc.density <- rep(0, key.n)
     if (any(cellinf)) {
 			#lc.range <- c(-Inf, seq( -absmax, absmax, length.out=key.n-2), Inf)
 			lc.range <- c(-Inf, seq( lc.min, lc.max, length.out=key.n-2), Inf)
 			lc.col <- c(cell.col.inf[1], names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n-2)], cell.col.inf[2])
-      lc.density[c(1,length(lc.density))] = 3
+      lc.density[c(1,length(lc.density))] = inf.shading
 		} else {
 			#lc.range = seq( -absmax, absmax, length.out=key.n )
 			lc.range = seq( lc.min, lc.max, length.out=key.n )
@@ -217,7 +224,7 @@ cell.plot = function(
       lc.range[i.center] <- 0
     }
 		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
-		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=cell.outer, density = lc.density, border=NA )
+		rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=cell.lwd, density = lc.density, border=NA )
     text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=xlab.cex, font=2 )
     text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )
   }
