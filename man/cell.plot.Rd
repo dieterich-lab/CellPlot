@@ -4,14 +4,13 @@
 \alias{cell.plot}
 \title{Cell Plot}
 \usage{
-cell.plot(x, cells, lab.col = NULL,
-  cell.col.fun = colorRampPalette(c("blue", "white", "red")),
+cell.plot(x, cells, lab.col = NULL, cell.col = c("blue", "white", "red"),
   inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0.1),
-  y.mar = c(0.08, 0), lab.cex = 1, xdes.cex = 1, xlab.cex = 1,
-  xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE, cell.lwd = 2,
-  cell.outer = 2, cell.sort = T, cell.limit = 50, xlab = "", key = T,
-  key.lab = "Color Key", key.n = 11, spacers = NULL, scaleTo = NULL,
-  ...)
+  y.mar = c(0.08, 0), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
+  xlab.cex = 1, xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE,
+  cell.lwd = 2, cell.outer = 2, cell.sort = T, cell.limit = 50,
+  cell.bounds = NULL, xlab = "", key = T, key.lab = "Color Key",
+  key.n = 11, spacers = NULL, scaleTo = NULL, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -21,8 +20,8 @@ cell.plot(x, cells, lab.col = NULL,
 \item{lab.col}{Vector of color names. Must be the same length as x. Defaults
 to black.}
 
-\item{cell.col.fun}{Function to generate the color spectrum for the
-cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).}
+\item{cell.col}{Character vector of length 3, specifying colors for the low end, zero, and high
+end of cell values. Defaults to c("blue","white","red").}
 
 \item{inf.shading}{Numeric. Density of shading lines for infinite values. Defaults to 30/cell.lwd.}
 
@@ -34,6 +33,9 @@ of the main plot. Defaults to c(0.2,0.1).}
 \item{y.mar}{Numeric vector defining the inside margin to the top and bottom
 of the main plot. Defaults to c(0.08,0).}
 
+\item{x.bound}{Numeric, must be positive. Specifies upper bound of x-axis scale. If NULL (the default),
+this value is chosen automatically.}
+
 \item{lab.cex}{Scaling factor for label text size.}
 
 \item{xdes.cex}{Scaling factor for key legend text size.}
@@ -42,8 +44,7 @@ of the main plot. Defaults to c(0.08,0).}
 
 \item{xlab.ticks}{Number of ticks for the x-axis.}
 
-\item{sym}{Logical, if \code{TRUE} create a symmetric color range despite if
-the absolute values of the minimum and maximum in the cells value differ.}
+\item{sym}{Logical, if \code{TRUE} visualize cell values on a symmetrical scale.}
 
 \item{cell.lwd}{Size of the border of individual cells. Defaults to 1.}
 
@@ -53,6 +54,10 @@ the absolute values of the minimum and maximum in the cells value differ.}
 
 \item{cell.limit}{Number of cells above which separators between cells are
 omitted. Defaults to 50.}
+
+\item{cell.bounds}{Numeric vector of length 2, specifying lower and upper
+bound for cell value visualization. If set to NULL (the default), these
+values are chosen automatically.}
 
 \item{xlab}{Label for x-axis.}
 

@@ -16,8 +16,8 @@
 #' @param lab.col Vector of color names. Must be the same length as x. Defaults
 #' to black.
 #'
-#' @param cell.col.fun Function to generate the color spectrum for the
-#' cell mappings. Defaults to colorRampPalette( c("blue","white","red") ).
+#' @param cell.col Character vector of length 3, specifying colors for the low end, zero, and high
+#' end of cell values. Defaults to c("blue","white","red").
 #'
 #' @param inf.shading Numeric. Density of shading lines for infinite values. Defaults to 30/cell.lwd.
 #'
@@ -28,6 +28,9 @@
 #'
 #' @param y.mar Numeric vector defining the inside margin to the top and bottom
 #' of the main plot. Defaults to c(0.08,0).
+#' 
+#' @param x.bound Numeric, must be positive. Specifies upper bound of x-axis scale. If NULL (the default),
+#' this value is chosen automatically.
 #'
 #' @param lab.cex Scaling factor for label text size.
 #'
@@ -45,6 +48,10 @@
 #'
 #' @param cell.limit Number of cells above which separators between cells are
 #' omitted. Defaults to 50.
+#' 
+#' @param cell.bounds Numeric vector of length 2, specifying lower and upper 
+#' bound for cell value visualization. If set to NULL (the default), these
+#' values are chosen automatically.
 #'
 #' @param xlab Label for x-axis.
 #'
@@ -60,8 +67,7 @@
 #' bars. Used to ensure visual consistency across different plots. Defaults to
 #' \code{NULL}, i.e. the plotting area is scaled to fit.
 #'
-#' @param sym Logical, if \code{TRUE} create a symmetric color range despite if
-#' the absolute values of the minimum and maximum in the cells value differ.
+#' @param sym Logical, if \code{TRUE} visualize cell values on a symmetrical scale.
 #'
 #' @param \dots Arguments passed through to the title() function. E.g.
 #' main = "Plot title".
@@ -94,13 +100,19 @@
 #' @rdname cell.plot
 #' @export
 cell.plot = function(
-	x, cells, lab.col=NULL, cell.col.fun=colorRampPalette( c("blue","white","red") ),
-	inf.shading = 30/cell.lwd,	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, xlab="",
+	x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
+	inf.shading = 30/cell.lwd,	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
+	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
 	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... )
 {
+  # parameter checks
+  if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
+    stop("x.bound must be a positive numeric value")
+  }}
+  
+  
   par(xpd=NA)
-  cell.col.inf = cell.col.fun(2)
+  cell.col.inf = cell.col[c(1,3)]
   #if (is.null(xlab.ticks)) { xlab.ticks = round( max(x) / 10, digits = 1) }
   #ticksize = xlab.ticks
   ybound = c(1,0) + c(-1,1)*y.mar
@@ -124,9 +136,14 @@ cell.plot = function(
 	cellinf <- is.infinite(celldata)
 	cellmis <- is.na(celldata)
   cellbound = range(celldata[!cellinf & !cellmis])
+  if (!is.null(cell.bounds) & is.numeric(cell.bounds) ) { cellbound = cell.bounds }
   if (sym) { cellbound = rep( max(abs(cellbound)),2 ) * c(-1,1) }
-  cellcolmap = seq( cellbound[1], cellbound[2], length.out=101 )
-  names(cellcolmap) = cell.col.fun(101)
+  # cellcolmap = seq( cellbound[1], cellbound[2], length.out=101 )  
+  cellcolmap = c( seq( cellbound[1], 0, length.out=50 ), 0, seq( 0, cellbound[2], length.out=50 ) )
+  names(cellcolmap) = c( colorRampPalette( c(cell.col[1], cell.col[2]) )(50),
+                         cell.col[2],
+                         colorRampPalette( c(cell.col[2], cell.col[3]) )(50) )
+  
 	if (any(cellinf)) {
 		if (key.n < 5) stop("key.n must be >4 when infinite values are present")
 	} else {
@@ -144,8 +161,9 @@ cell.plot = function(
   for (i in 1:length(x)) {
 		bar.n <- length(cells[[i]])
 		bar.nreal <- sum(!is.na(cells[[i]]))
-    xsteps = seq(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1],
-								 length.out=(bar.n+1))
+    xsteps = seq(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1], length.out=(bar.n+1))
+    if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { xsteps = seq(xbound[1], (x[i]/x.bound)*(xbound[2]-xbound[1])+xbound[1], length.out=(bar.n+1)) }
+    
     if (is.null(cells)) { xsteps = c(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1]) }
 		# row labels
     text( xbound[1], ysteps[i+1]+ygap*0.5, labels=labvec[i], pos=2, cex=lab.cex, col = colvec[i] )
@@ -182,11 +200,12 @@ cell.plot = function(
     rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer )
   }
 
-  conversion = (xbound[2]-xbound[1])/(max(x)-min(0,min(x)) )
+  #conversion = (xbound[2]-xbound[1])/(max(x)-min(0,min(x)) )
   #axis.at = seq(xbound[1], xbound[2], by=conversion*ticksize )
   #axis.lab = round( seq( min(0, min(x)), (length(axis.at)-1)*ticksize, length.out=length(axis.at) ), digits=1 )
   axis.at <- seq(xbound[1], xbound[2], length.out = xlab.ticks)
   axis.lab <- round(seq(min(0,min(x)), max(x), length.out = xlab.ticks),1)
+  if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { axis.lab <- round(seq(min(0,min(x)), x.bound, length.out = xlab.ticks),1) }
 
   axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
   
@@ -198,9 +217,9 @@ cell.plot = function(
   # color legend
   if (key) {
     lc = c( 0.8,ybound[2]-ygap-yspace*2,0,ybound[2]-yspace*2 )
-    absmax = max(abs(celldata[!cellinf & !cellmis]))
-		lc.min <- min(celldata[!cellinf & !cellmis])
-		lc.max <- max(celldata[!cellinf & !cellmis])
+    absmax = max(abs(cellbound))
+		lc.min <- min(cellbound)
+		lc.max <- max(cellbound)
 		cellcolmap.center <- cellcolmap[51]
 		cellcolmap <- cellcolmap[lc.min <= cellcolmap & cellcolmap <= lc.max]
     lc.xsteps = seq( xbound[1], xbound[2], length.out=key.n+1 )
