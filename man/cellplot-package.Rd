@@ -12,8 +12,8 @@ Plots horizontal bars that are subdivided into cells, allowing the mapping of ad
 \tabular{ll}{
 Package: \tab cellplot\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2015-04-21\cr
+Version: \tab 1.1\cr
+Date: \tab 2015-07-21\cr
 License: \tab GPL-2\cr
 }
 }

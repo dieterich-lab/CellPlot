@@ -10,7 +10,7 @@ cell.plot(x, cells, lab.col = NULL, cell.col = c("blue", "white", "red"),
   xlab.cex = 1, xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE,
   cell.lwd = 2, cell.outer = 2, cell.sort = T, cell.limit = 50,
   cell.bounds = NULL, xlab = "", key = T, key.lab = "Color Key",
-  key.n = 11, spacers = NULL, scaleTo = NULL, ...)
+  key.n = 11, spacers = NULL, bar.scale = 1, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -69,9 +69,8 @@ infinite values are present).}
 \item{spacers}{Numeric vector. Inserts empty space after the specified
 positions to visually group bars.}
 
-\item{scaleTo}{Scale the plotting area to accomodate exactly this number of
-bars. Used to ensure visual consistency across different plots. Defaults to
-\code{NULL}, i.e. the plotting area is scaled to fit.}
+\item{bar.scale}{Numeric. Optional multiplier for individual bar height. If the
+resulting plot would exceed the plotting area, this value is scaled down to fit.}
 
 \item{\dots}{Arguments passed through to the title() function. E.g.
 main = "Plot title".}

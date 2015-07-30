@@ -63,9 +63,8 @@
 #' @param spacers Numeric vector. Inserts empty space after the specified
 #' positions to visually group bars.
 #'
-#' @param scaleTo Scale the plotting area to accomodate exactly this number of
-#' bars. Used to ensure visual consistency across different plots. Defaults to
-#' \code{NULL}, i.e. the plotting area is scaled to fit.
+#' @param bar.scale Numeric. Optional multiplier for individual bar height. If the 
+#' resulting plot would exceed the plotting area, this value is scaled down to fit.
 #'
 #' @param sym Logical, if \code{TRUE} visualize cell values on a symmetrical scale.
 #'
@@ -103,13 +102,14 @@ cell.plot = function(
 	x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
 	inf.shading = 30/cell.lwd,	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
 	xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
-	key=T, key.lab="Color Key", key.n=11, spacers=NULL, scaleTo=NULL, ... )
+	key=T, key.lab="Color Key", key.n=11, spacers=NULL, bar.scale=1, ... )
 {
   # parameter checks
   if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
     stop("x.bound must be a positive numeric value")
   }}
   
+  yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
   
   par(xpd=NA)
   cell.col.inf = cell.col[c(1,3)]
@@ -118,8 +118,13 @@ cell.plot = function(
   ybound = c(1,0) + c(-1,1)*y.mar
 
   # scale bar area height to uniform scaleTo bars -- if it isn't provided, scale to fit
-  if ( is.null(scaleTo) ) { scaleTo = length(x) + length(spacers) }
-  ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * length(x)
+  # if ( is.null(scaleTo) ) { scaleTo = length(x) + length(spacers) }
+  # ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * length(x)
+  ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * 0.6 * bar.scale )
+  if (ybound[2] < par("usr")[3]) { 
+    ybound[2] = y.mar[2]
+    warning("Plotting area too small! Decrease bar.scale or increase vertical space.")
+  }
 
   xbound = c(0,1) + c(1,-1)*x.mar
   if (is.null(spacers)) {
