@@ -63,8 +63,8 @@
 #' @param spacers Numeric vector. Inserts empty space after the specified
 #' positions to visually group bars.
 #'
-#' @param bar.scale Numeric. Optional multiplier for individual bar height. If the 
-#' resulting plot would exceed the plotting area, this value is scaled down to fit.
+#' @param bar.scale Numeric. Set bar height to a fixed value multiplied by this
+#' parameter. If the plotting area is too small clipping may occur.
 #'
 #' @param sym Logical, if \code{TRUE} visualize cell values on a symmetrical scale.
 #'
@@ -100,16 +100,17 @@
 #' @export
 cell.plot = function(
   x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
-  inf.shading = 30/cell.lwd,	space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
+  inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0.1), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
   xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
-  key=T, key.lab="Color Key", key.n=11, spacers=NULL, bar.scale=1, ... )
+  key=T, key.lab="Color Key", key.n=11, spacers=NULL, bar.scale=NULL, ... )
 {
   # parameter checks
   if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
     stop("x.bound must be a positive numeric value")
   }}
   
-  yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
+  # yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
+  yscale = (diff(par("usr")[3:4])/par("pin")[2])
   
   par(xpd=NA)
   cell.col.inf = cell.col[c(1,3)]
@@ -120,11 +121,12 @@ cell.plot = function(
   # scale bar area height to uniform scaleTo bars -- if it isn't provided, scale to fit
   # if ( is.null(scaleTo) ) { scaleTo = length(x) + length(spacers) }
   # ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * length(x)
-  ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * 0.6 * bar.scale )
-  if (ybound[2] < par("usr")[3]) { 
-    ybound[2] = y.mar[2]
-    warning("Plotting area too small! Decrease bar.scale or increase vertical space.")
-  }
+  
+  #   ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * bar.scale )
+  #   if ( (ybound[2] < par("usr")[3]) && is.null(bar.scale.fixed) ) { 
+  #     ybound[2] = y.mar[2]
+  #     warning("Plotting area too small! Decrease bar.scale or increase vertical space.")
+  #   }
   
   xbound = c(0,1) + c(1,-1)*x.mar
   if (is.null(spacers)) {
@@ -132,10 +134,21 @@ cell.plot = function(
   } else {
     spacers = spacers + 1:length(spacers) + 1
     ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1+length(spacers) ) )
+    
+    if ( !is.null(bar.scale) ) {
+      ysteps = ybound[1] - cumsum( rep(0.3 * yscale * bar.scale, length(x)+1+length(spacers) ) )
+      ybound[2] = min(ysteps)
+      if ( ybound[2] < par("usr")[3] ) {
+        warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
+      }
+    }
+    
     ysteps = ysteps[-spacers]
   }
   ygap = abs(ysteps[1]-ysteps[2])
   yspace = space * ygap
+  
+  
   
   celldata = unlist(cells)
   cellinf <- is.infinite(celldata)
@@ -221,7 +234,7 @@ cell.plot = function(
   
   # color legend
   if (key) {
-    lc = c( 0.8,ybound[2]-ygap-yspace*2,0,ybound[2]-yspace*2 )
+    lc = c( 0.8,ybound[2]-ygap-yspace,0,ybound[2]-yspace*3 )
     absmax = max(abs(cellbound))
     lc.min <- min(cellbound)
     lc.max <- max(cellbound)
@@ -254,6 +267,3 @@ cell.plot = function(
   }
   par(xpd=T)
 }
-
-
-# I am change

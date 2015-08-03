@@ -60,7 +60,9 @@ rs.sym4go = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=
 rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=1, shading.density=20, space = 0.1, midgap=0.1, mid.values=NULL, 
                        mid.bounds=NULL, mid.col=c("white","darkred"), label.col=NULL, key.lab="color key", label.align.left=T, gridlines=T,
                        cols = c("deepskyblue2","grey","coral"), group.labels=c("Downregulated","Annotated","Upregulated"), 
-                       group.cex=0.8, axis.cex=0.8, mid.cex=0.8, label.cex=0.8, ticksize=NULL, xlim=NULL, inclusion=F, as.percentage=F, ...) {
+                       group.cex=0.8, axis.cex=0.8, mid.cex=0.8, label.cex=1, ticksize=NULL, xlim=NULL, inclusion=F, as.percentage=F, ...) {
+  
+  yscale = (diff(par("usr")[3:4])/par("pin")[2])
   
   if(!is.null(mid.bounds)) {
     midbound=mid.bounds
@@ -83,8 +85,15 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
       x[4:5] = x[4:5] / x[3] *100
       return(x)
     }))
-    xlim=max(symframe[,c(1,2,4,5)])
-    xlim=xlim+xlim%%ticksize
+    xl=max(symframe[,c(1,2,4,5)])
+    while ( xl/ticksize < 1 ) {
+      ticksize=ticksize/10
+    }
+    xlim=xl+ticksize%%xl
+    
+    print(xl)
+    print(ticksize)
+    
   }
   
   par(xpd=NA)
@@ -95,11 +104,11 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     bound = xlim
   }
   boundmid = max(symframe[,3])
-  midmean = boundmid/2
+  midmean = boundmid/3
   
   ybound = c(1,0) + c(-1,1)*y.mar
-  yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
-  ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * 0.4 * bar.scale )
+  #yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
+  #ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * 0.4 * bar.scale )
   
   # if (!is.null(scaleTo)) { ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * nrow(symframe) }
   xbound = c(0,1) + c(1,-1)*x.mar
@@ -107,12 +116,21 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
   x.right = c( (xbound[2]-xbound[1])*(0.5+midgap)+xbound[1], xbound[2] )
   ysteps = seq( ybound[2], ybound[1], length.out=( nrow(symframe)+1 ) )
   
+  if ( !is.null(bar.scale) ) {
+    ybound[2] = ybound[1]-( 0.3 * yscale * bar.scale * nrow(symframe) )
+    ysteps = ybound[2] + c(0, cumsum( rep(0.3 * yscale * bar.scale, nrow(symframe) ) ) )
+    
+    if ( ybound[2] < par("usr")[3] ) {
+      warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
+    }
+  }
+  
   ygap = abs(ysteps[1]-ysteps[2])
   yspace = space * ygap
   
   
   if (!is.null(ticksize)) {
-    ticklabels = round( seq(0,bound,ticksize), digits = 0 )
+    ticklabels = round( seq(0,bound,ticksize), digits = ifelse(ticksize>=1, 0, 1) )
     left.axis.at = (sort(ticklabels,decreasing = T)/bound) * (x.left[2]-x.left[1]) + x.left[1] + (bound-max(ticklabels))/bound * (x.left[2]-x.left[1])
     right.axis.at = (ticklabels/bound) * (x.right[2]-x.right[1]) + x.right[1]
   } else {
@@ -133,24 +151,15 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     segments(right.axis.at[length(right.axis.at)],ybound[2]-yspace,right.axis.at[1],ybound[2]-yspace, col="grey", lwd = bar.lwd)
   }
   
-  
-  
   for (i in 1:nrow(symframe)) {
     
     # the one in the middle
     midspace = 0.1 * (x.right[1] - x.left[2])
     midrange = (x.right[1] - x.left[2]) - 2 * midspace
-    #midspace = (midspace + (boundmid - symframe[i,3])) * midrange/ boundmid + midrange*0.1
     midspace = ((boundmid - symframe[i,3]) / (2*boundmid) ) * midrange + midspace
     
-    
     rect( x.left[2], ysteps[i+1] - yspace, x.right[1], ysteps[i] + yspace, border = NA, col=cols[2], density = shading.density, lwd = 2 )
-    # rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, col="darkgray", lwd = bar.lwd, density = shading.density)
     rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = bar.lwd, col=mid.c[i])
-    
-    # pillars of the community
-    #segments(x.left[2], ybound[2], x.left[2], ybound[1])
-    #segments(x.right[1], ybound[2], x.right[1], ybound[1])
     
     # left all
     rect( (bound-sum(symframe[i,1:2]))/bound * (x.left[2]-x.left[1]) + x.left[1], 
@@ -184,7 +193,7 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
       text( (xbound[2]-xbound[1])/2 + xbound[1], ysteps[i]+0.5*ygap, symframe[i,3], 
             col = "black", font=2, cex = mid.cex )
     } else { 
-      text( x.right[1]-midspace+0.09*midrange, ysteps[i]+0.5*ygap, symframe[i,3], 
+      text( x.right[1]-0.3*midrange, ysteps[i]+0.5*ygap, symframe[i,3], 
             col = "black", font=2, cex = mid.cex ) 
     }
     
@@ -194,13 +203,12 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
   }
   
   # I AM LEGEND
-  ylegend = ybound[1] + 0.04*yscale
+  ylegend = ybound[1] + 0.4*yscale
   
   rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], lwd = bar.lwd)
   rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[3], lwd = bar.lwd)
   
   if (!inclusion) {
-    #rect(x.left[2]-midrange*0.5, ylegend+ygap*2, x.right[1]+midrange*0.5, ylegend+ygap*0.5, lwd = bar.lwd)
     rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*2, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.5, lwd = bar.lwd)
     
     rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, lwd = bar.lwd, col="black", density=shading.density)
