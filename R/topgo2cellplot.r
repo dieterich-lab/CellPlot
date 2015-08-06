@@ -18,7 +18,8 @@
 #' @param p.adj.method A character string naming the p value adjustment
 #' method. Use \code{"none"} to pass through. See \link{p.adjust}.
 #' 
-#' @author Sven E. Templer
+#' @author 
+#' Sven E. Templer [aut]
 
 #' @export
 topgo2cellplot <- function (

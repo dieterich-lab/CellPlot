@@ -34,6 +34,6 @@ differential gene expression fold changes to create a data list
 suitable for \code{cellplot} input.
 }
 \author{
-Sven E. Templer
+Sven E. Templer [aut]
 }
 
