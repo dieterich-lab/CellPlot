@@ -44,6 +44,8 @@ this value is chosen automatically.}
 
 \item{xlab.ticks}{Number of ticks for the x-axis.}
 
+\item{xlab.yoffset}{...}
+
 \item{sym}{Logical, if \code{TRUE} visualize cell values on a symmetrical scale.}
 
 \item{cell.lwd}{Size of the border of individual cells. Defaults to 1.}
@@ -60,6 +62,8 @@ bound for cell value visualization. If set to NULL (the default), these
 values are chosen automatically.}
 
 \item{xlab}{Label for x-axis.}
+
+\item{key}{Logical value. Show the key/legend for the cell colors.}
 
 \item{key.lab}{Label for color key.}
 

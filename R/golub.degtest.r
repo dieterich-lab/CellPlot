@@ -18,6 +18,7 @@
 
 #' @export
 golub.degtest <- function (e, i, a.frame = NULL) {
+  log2fc <- NULL
   s <- Map(function (a,b) {
     t <- t.test(a,b)
     t$fc <- t$estimate[1]/t$estimate[2]

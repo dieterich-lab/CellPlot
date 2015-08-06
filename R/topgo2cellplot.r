@@ -26,13 +26,11 @@ topgo2cellplot <- function (
   go, deg.logfc = NULL, deg.genes = NULL, n = 30, ids = FALSE, 
   replace.infinite = FALSE, p.adj.method = 'fdr')
 {
-  # go: topGOdata
-  # cuf: cuffdiff # x <- read.cuffdiff()
-  # n: number of top nodes
-  
+  if (!requireNamespace("topGO")) stop("Install package topGO")
   # test GO enrichment
-  go.test <- getSigGroups(go, new("classicCount", testStatistic = GOFisherTest, name = "Fisher test"))
-  go.table <- GenTable(go, p=go.test, orderBy="p", ranksOf="p", topNodes=n)
+  go.test <- topGO::getSigGroups(
+    go, new("classicCount", testStatistic = topGO::GOFisherTest, name = "Fisher test"))
+  go.table <- topGO::GenTable(go, p=go.test, orderBy="p", ranksOf="p", topNodes=n)
   go.table$p <- as.numeric(go.table$p)
   gn <- length(go@graph@nodes)
   #gn <- length(topGO:::genes(go))
@@ -40,8 +38,8 @@ topgo2cellplot <- function (
   ret.loge <- log(go.table$Significant / go.table$Expected)
   
   # convert data
-  go.signames <- sigGenes(go)
-  ret.genes <- genesInTerm(go, go.table$GO.ID)
+  go.signames <- topGO::sigGenes(go)
+  ret.genes <- topGO::genesInTerm(go, go.table$GO.ID)
   ret.genes <- lapply(ret.genes, function (i) {intersect(i,go.signames)})
   ret.term <- go.table$Term
   ret.ids <- names(ret.genes)

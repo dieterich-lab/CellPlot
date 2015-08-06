@@ -38,6 +38,8 @@
 #' @param xlab.cex Scaling factor for x-label text size.
 #'
 #' @param xlab.ticks Number of ticks for the x-axis.
+#' 
+#' @param xlab.yoffset ...
 #'
 #' @param cell.lwd Size of the border of individual cells. Defaults to 1.
 #'
@@ -53,6 +55,8 @@
 #' values are chosen automatically.
 #'
 #' @param xlab Label for x-axis.
+#' 
+#' @param key Logical value. Show the key/legend for the cell colors.
 #'
 #' @param key.lab Label for color key.
 #'
