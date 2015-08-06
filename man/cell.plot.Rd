@@ -83,9 +83,6 @@ corresponding bar. A typical usage scenario is plotting the enrichment of
 Gene Ontology terms, with individual cells reflecting the differential
 regulation of the constituent genes.
 }
-\details{
-Details
-}
 \examples{
 \dontrun{
 ## Generate random positive vector and name it
@@ -105,9 +102,14 @@ cells[[9]][3] = -Inf
 ## Plot with spacers
 cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+
+## golub.deg data example:
+data(golub.deg)
+cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
 }
 }
 \author{
-Robert Sehlke
+Robert Sehlke [aut]\cr
+Sven E. Templer [ctb]
 }
 

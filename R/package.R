@@ -1,18 +1,19 @@
-#' @title cell.plot
+#' @title Package cellplot
 #' 
-#' Plots a horizontal barchart of strictly positive values in x. For each entry, a vector of additional values needs to be provided in a list. 
-#' The additional values are plotted as cells subdividing the length of the corresponding bar.
-#' A typical usage scenario is plotting the enrichment of Gene Ontology terms, with individual cells reflecting the differential regulation of the constituent genes.
+#' @description 
+#' Plot methods for presentation of cellular data as bar charts.
 #' 
-#' \tabular{ll}{
-#' Package: \tab cellplot\cr
-#' Type: \tab Package\cr
-#' Version: \tab 1.1\cr
-#' Date: \tab 2015-04-21\cr
-#' License: \tab GPL-2\cr
-#' }
-#' @name cellplot
-#' @author RS
+#' @details
+#' \code{\link{cell.plot}} - A function to plot segmented bars.\cr
+#' \code{\link{golub.deg}} - A data set with differential gene expression
+#' and gene ontology analysis derived from \link[multtest]{golub} data.\cr
+#' 
+#' @name cellplot-package
+#' 
+#' @author 
+#' Robert Sehlke\cr
+#' Sven E. Templer
+#' 
 #' @docType package
 
 NULL

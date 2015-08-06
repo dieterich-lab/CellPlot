@@ -1,13 +1,12 @@
-#' Cell Plot
+#' @title Cell Plot
 #'
+#' @description 
 #' Plots a horizontal barchart of strictly positive values in x. For each
 #' entry, a vector of additional values needs to be provided in a list. The
 #' additional values are plotted as cells subdividing the length of the
 #' corresponding bar. A typical usage scenario is plotting the enrichment of
 #' Gene Ontology terms, with individual cells reflecting the differential
 #' regulation of the constituent genes.
-#'
-#' Details
 #'
 #' @param x Strictly positive numeric vector.
 #'
@@ -71,7 +70,9 @@
 #' @param \dots Arguments passed through to the title() function. E.g.
 #' main = "Plot title".
 #'
-#' @author Robert Sehlke
+#' @author 
+#' Robert Sehlke [aut]\cr
+#' Sven E. Templer [ctb]
 #'
 #' @examples
 #' \dontrun{
@@ -92,11 +93,13 @@
 #' ## Plot with spacers
 #' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
 #'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+#'   
+#' ## golub.deg data example:
+#' data(golub.deg)
+#' cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
 #' }
 #'
 
-
-#' @rdname cell.plot
 #' @export
 cell.plot = function(
   x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
