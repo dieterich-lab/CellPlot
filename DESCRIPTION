@@ -1,9 +1,9 @@
 Package: cellplot
 Type: Package
-Title: Segmented bar charts for enrichment visualization.
+Title: Segmented bar chart plot methods.
 Version: 1.1
 Date: 2015-07-21
-Author: RS
-Maintainer: RS <RS@x.net>
+Author: Robert Sehlke, Sven E. Templer
+Maintainer: Robert Sehlke <rsehlke@age.mpg.de>
 Description: Plot for simultaneous visualization of functional enrichment and expression values.
 License: GPL-2
