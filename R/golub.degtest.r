@@ -1,4 +1,4 @@
-#' @title Test the golub data
+#' @title Perform DEG and GO enrichment analysis (of \code{golub} data)
 #' 
 #' @description  Method used to analyse differential gene expression of the
 #' \code{golub} data to create the \code{golub.deg} data.
@@ -13,10 +13,11 @@
 #' @return Returns a \code{data.frame}. See \link{golub.deg} for more
 #' information.
 #' 
-#' @author Sven E. Templer
+#' @author 
+#' Sven E. Templer [aut]
 
 #' @export
-golub.deg.test <- function (e, i, a.frame = NULL) {
+golub.degtest <- function (e, i, a.frame = NULL) {
   s <- Map(function (a,b) {
     t <- t.test(a,b)
     t$fc <- t$estimate[1]/t$estimate[2]

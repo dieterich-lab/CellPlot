@@ -1,4 +1,4 @@
-#' @title DEG and GO enrichment of \code{golub} data
+#' @title Data of DEG and GO enrichment analysis of \code{golub} data
 #' 
 #' @details Microarray gene expression data from leukemia study of Golub et al. (1999).
 #' Processed as described in Dudoit et al. (2002). Adapted from package 
@@ -8,8 +8,8 @@
 #' 
 #' @format A list containing 2 slots:
 #' \describe{
-#'   \item{stats}{A data.frame with the gene expression statistics.}
-#'   \item{go}{A list with the GO enrichment statistics.}
+#'   \item{\code{stats}}{A data.frame with the gene expression statistics.}
+#'   \item{\code{go}}{A list with the GO enrichment and DEG statistics.}
 #' }
 #' 
 #' @references
@@ -23,7 +23,9 @@
 #' Journal of the American Statistical Association, Volume 97, Issue 457,
 #' doi:10.1198/016214502753479248
 #' 
-#' @author Sven E. Templer
+#' @author 
+#' Sven E. Templer [aut]
+#' Authors of multtest package [ctb]
 #' 
 #' @examples
 #' \dontrun{
@@ -46,7 +48,7 @@
 #' ## data import and gene golub test
 #' data(golub)
 #' golub.deg <- list()
-#' golub.deg$stats <- golub.deg.test(
+#' golub.deg$stats <- golub.degtest(
 #'   golub, as.logical(golub.cl), 
 #'     data.frame(gene = golub.gnames[,3], 
 #'                gene.index = as.integer(golub.gnames[,1]),
@@ -64,10 +66,6 @@
 #'   annotationFun=annFUN.gene2GO, gene2GO=golub.deg$go)
 #' golub.deg$go <- topgo2cellplot(golub.deg$go, golub.deg$stats$log2fc, 
 #'                                golub.deg$stats$gene)
-#' 
-#' ### Visualization with cellplot:
-#' 
-#' cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
 #' 
 #' }
 #' 

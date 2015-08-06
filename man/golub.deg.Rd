@@ -3,17 +3,17 @@
 \docType{data}
 \name{golub.deg}
 \alias{golub.deg}
-\title{DEG and GO enrichment of \code{golub} data}
+\title{Data of DEG and GO enrichment analysis of \code{golub} data}
 \format{A list containing 2 slots:
 \describe{
-  \item{stats}{A data.frame with the gene expression statistics.}
-  \item{go}{A list with the GO enrichment statistics.}
+  \item{\code{stats}}{A data.frame with the gene expression statistics.}
+  \item{\code{go}}{A list with the GO enrichment and DEG statistics.}
 }}
 \usage{
 golub.deg
 }
 \description{
-DEG and GO enrichment of \code{golub} data
+Data of DEG and GO enrichment analysis of \code{golub} data
 }
 \details{
 Microarray gene expression data from leukemia study of Golub et al. (1999).
@@ -43,7 +43,7 @@ library(topGO)
 ## data import and gene golub test
 data(golub)
 golub.deg <- list()
-golub.deg$stats <- golub.deg.test(
+golub.deg$stats <- golub.degtest(
   golub, as.logical(golub.cl),
     data.frame(gene = golub.gnames[,3],
                gene.index = as.integer(golub.gnames[,1]),
@@ -62,14 +62,11 @@ golub.deg$go <- new(
 golub.deg$go <- topgo2cellplot(golub.deg$go, golub.deg$stats$log2fc,
                                golub.deg$stats$gene)
 
-### Visualization with cellplot:
-
-cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
-
 }
 }
 \author{
-Sven E. Templer
+Sven E. Templer [aut]
+Authors of multtest package [ctb]
 }
 \references{
 Golub et al. (1999), Molecular Classification of Cancer: Class Discovery and
