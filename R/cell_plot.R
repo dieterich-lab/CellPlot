@@ -37,9 +37,7 @@
 #'
 #' @param xlab.cex Scaling factor for x-label text size.
 #'
-#' @param xlab.ticks Number of ticks for the x-axis.
-#' 
-#' @param xlab.yoffset ...
+#' @param xlab.ticks Number of ticks for the x-axis..
 #'
 #' @param cell.lwd Size of the border of individual cells. Defaults to 1.
 #'
@@ -108,7 +106,7 @@
 cell.plot = function(
   x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
   inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0.1), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-  xlab.yoffset = 0.08, sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
+  sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
   key=T, key.lab="Color Key", key.n=11, spacers=NULL, bar.scale=NULL, ... )
 {
   # parameter checks
