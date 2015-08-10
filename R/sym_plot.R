@@ -219,16 +219,10 @@ sym.plot = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=N
   ygap = abs(ysteps[1]-ysteps[2])
   yspace = space * ygap
   
-  
-  if (!is.null(ticksize)) {
     ticklabels = round( seq(0,bound,ticksize), digits = ifelse(ticksize>=1, 0, 1) )
     left.axis.at = (sort(ticklabels,decreasing = T)/bound) * (x.left[2]-x.left[1]) + x.left[1] + (bound-max(ticklabels))/bound * (x.left[2]-x.left[1])
     right.axis.at = (ticklabels/bound) * (x.right[2]-x.right[1]) + x.right[1]
-  } else {
-    ticklabels = round( seq(0,bound,bound/ticks), digits = ifelse(scale,1,0) )
-    left.axis.at = seq(x.left[2], x.left[1], by= -( (x.left[2] - x.left[1]) / ticks)  )
-    right.axis.at = seq(x.right[1], x.right[2], by= ( (x.right[2] - x.right[1]) / ticks)  )
-  }
+
   if (as.percentage) { ticklabels = paste0(ticklabels, "%")}
   
   
