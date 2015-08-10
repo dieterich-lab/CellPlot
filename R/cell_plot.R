@@ -12,7 +12,7 @@
 #'
 #' @param cells List of vectors. Must be the same length as x.
 #'
-#' @param lab.col Vector of color names. Must be the same length as x. Defaults
+#' @param x.col Vector of color names. Must be the same length as x. Defaults
 #' to black.
 #'
 #' @param cell.col Character vector of length 3, specifying colors for the low end, zero, and high
@@ -51,6 +51,9 @@
 #' @param cell.bounds Numeric vector of length 2, specifying lower and upper 
 #' bound for cell value visualization. If set to NULL (the default), these
 #' values are chosen automatically.
+#' 
+#' @param elem.bounds Vector of length 2 specifying a filter on minimum and maximum number of elements
+#' in a category. Defaults to NULL, in which case no filter is applied.
 #'
 #' @param xlab Label for x-axis.
 #' 
@@ -98,21 +101,33 @@
 #'   
 #' ## golub.deg data example:
 #' data(golub.deg)
-#' cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
+#' cell.plot(x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
 #' }
 #'
 
 #' @export
 cell.plot = function(
-  x, cells, lab.col=NULL, cell.col=c("blue","white","red"),
+  x, cells, x.col=NULL, cell.col=c("blue","white","red"),
   inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0.1), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-  sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=50, cell.bounds=NULL, xlab="",
-  key=T, key.lab="Color Key", key.n=11, spacers=NULL, bar.scale=NULL, ... )
+  sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=30, cell.bounds=NULL, elem.bounds=NULL, xlab="term enrichment",
+  key=T, key.lab="differential expression", key.n=11, spacers=NULL, bar.scale=NULL, gridlines=T, ... )
 {
   # parameter checks
   if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
     stop("x.bound must be a positive numeric value")
   }}
+  
+  if(!is.null(elem.bounds)) {
+    ec = sapply(cells,length)
+    excl = which( (ec < elem.bounds[1]) | (ec > elem.bounds[2]) )
+    if (length(excl) == length(x) ) { stop("No elements in the specified range!") }
+    if (length(excl) > 0) {
+      x = x[-excl]
+      if (!is.null(cells)) { cells = cells[-excl] } 
+      else { x.up=x.up[-excl]; x.down=x.down[-excl] }
+      if (!is.null(x.col)) { x.col = x.col[-excl] }
+    }
+  }
   
   # yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
   yscale = (diff(par("usr")[3:4])/par("pin")[2])
@@ -123,38 +138,26 @@ cell.plot = function(
   #ticksize = xlab.ticks
   ybound = c(1,0) + c(-1,1)*y.mar
   
-  # scale bar area height to uniform scaleTo bars -- if it isn't provided, scale to fit
-  # if ( is.null(scaleTo) ) { scaleTo = length(x) + length(spacers) }
-  # ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * length(x)
-  
-  #   ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * bar.scale )
-  #   if ( (ybound[2] < par("usr")[3]) && is.null(bar.scale.fixed) ) { 
-  #     ybound[2] = y.mar[2]
-  #     warning("Plotting area too small! Decrease bar.scale or increase vertical space.")
-  #   }
-  
-  xbound = c(0,1) + c(1,-1)*x.mar
-  if (is.null(spacers)) {
-    ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1 ) )
-  } else {
-    spacers = spacers + 1:length(spacers) + 1
-    ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1+length(spacers) ) )
-    
-    if ( !is.null(bar.scale) ) {
-      ysteps = ybound[1] - cumsum( rep(0.3 * yscale * bar.scale, length(x)+1+length(spacers) ) )
+  if ( !is.null(bar.scale) ) {
+      ysteps = ybound[1] - cumsum( rep(0.3 * yscale * bar.scale, length(x)+1+ifelse(is.null(spacers), 0, length(spacers)) ) )
       ybound[2] = min(ysteps)
       if ( ybound[2] < par("usr")[3] ) {
         warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
       }
+      
+    xbound = c(0,1) + c(1,-1)*x.mar
+    if (is.null(spacers)) {
+      ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1 ) )
+    } else {
+      spacers = spacers + 1:length(spacers) + 1
+      ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1+length(spacers) ) )
+      ysteps = ysteps[-spacers]
     }
-    
-    ysteps = ysteps[-spacers]
   }
+
   ygap = abs(ysteps[1]-ysteps[2])
   yspace = space * ygap
-  
-  
-  
+
   celldata = unlist(cells)
   cellinf <- is.infinite(celldata)
   cellmis <- is.na(celldata)
@@ -176,11 +179,24 @@ cell.plot = function(
   
   labvec = rep("",length(x))
   if (!is.null(names(x))) { labvec=names(x) }
-  colvec = lab.col
+  colvec = x.col
   if( is.null(colvec) ) { colvec = rep("black",length(x)) }
   
   # do the actual plotting
   plot.new()
+  
+  axis.at <- seq(xbound[1], xbound[2], length.out = xlab.ticks)
+  axis.lab <- round(seq(min(0,min(x)), max(x), length.out = xlab.ticks),1)
+  if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { axis.lab <- round(seq(min(0,min(x)), x.bound, length.out = xlab.ticks),1) }
+  
+  # GRID
+  if (gridlines) {
+    segments(axis.at, ybound[2]-yspace, axis.at, ybound[1]+0.015, col="grey", lwd = cell.outer )
+    #segments(left.axis.at[length(left.axis.at)],ybound[2]-yspace,left.axis.at[1],ybound[2]-yspace, col="grey", lwd = bar.lwd)
+    segments(axis.at[length(axis.at)],ybound[2]-yspace,axis.at[1],ybound[2]-yspace, col="grey", lwd = cell.outer)
+  }
+  axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
+  
   for (i in 1:length(x)) {
     bar.n <- length(cells[[i]])
     bar.nreal <- sum(!is.na(cells[[i]]))
@@ -223,19 +239,12 @@ cell.plot = function(
     rect( xbound[1], ysteps[i+1]+ygap-yspace, xsteps[length(xsteps)], ysteps[i+1]+yspace, lwd=cell.outer )
   }
   
-  #conversion = (xbound[2]-xbound[1])/(max(x)-min(0,min(x)) )
-  #axis.at = seq(xbound[1], xbound[2], by=conversion*ticksize )
-  #axis.lab = round( seq( min(0, min(x)), (length(axis.at)-1)*ticksize, length.out=length(axis.at) ), digits=1 )
-  axis.at <- seq(xbound[1], xbound[2], length.out = xlab.ticks)
-  axis.lab <- round(seq(min(0,min(x)), max(x), length.out = xlab.ticks),1)
-  if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { axis.lab <- round(seq(min(0,min(x)), x.bound, length.out = xlab.ticks),1) }
   
-  axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
   
   title( ... )
   # XAXIS DESIGNATION
   text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = xlab.cex)*2, labels=xlab, pos=3, cex=xdes.cex )
-  segments( xbound[1], ybound[1]+0.015, xbound[1], ybound[2], lwd=cell.outer)
+  segments( xbound[1], ybound[1]+0.015, xbound[1], ybound[2]-yspace, lwd=cell.outer)
   
   # color legend
   if (key) {
