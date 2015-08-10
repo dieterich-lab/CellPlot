@@ -24,6 +24,11 @@
 #' @param cells List of vectors (e.g. gene logfold-changes). Must be the same length and order as x.
 #' 
 #' @param sort Sort categories by their cardinality. Defaults to FALSE.
+#' 
+#' @param main Title.
+#' 
+#' @param elem.bounds Vector of length 2 specifying a filter on minimum and maximum cardinality of
+#' the central column sets. Defaults to NULL, in which case no filter is applied.
 #'
 #' @param x.mar Left and right margins as fractions of plot width. Defaults to c(0.2,0.05).
 #'
@@ -92,7 +97,7 @@
 #' data(golub.deg)
 #' sym.plot(x = golub.deg$go$go.loge, 
 #' x.annotated = attr(golub.deg$go, "gotab")$Annotated[match( golub.deg$go$go.ids, attr(golub.deg$go, "gotab")$GO.ID)], 
-#' cells = golub.deg$go$deg.logfc)
+#' cells = golub.deg$go$deg.logfc, elem.bounds = c(10,100), bar.scale=1, x.mar=c(0.3,0))
 #' }
 #'
 
@@ -121,7 +126,7 @@ if (0) {
 }
 
 
-sym.plot = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=NULL, sort=F, main="", 
+sym.plot = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=NULL, sort=F, main="", elem.bounds=NULL, 
                      x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
                      mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
                      group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=0.8, mid.cex=0.8, 
@@ -135,6 +140,18 @@ sym.plot = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=N
   
   
   # formatting input
+  if(!is.null(elem.bounds)) {
+    excl = which( (x.annotated < elem.bounds[1]) | (x.annotated > elem.bounds[2]) )
+    if (length(excl) == length(x) ) { stop("No elements in the specified range!") }
+    if (length(excl) > 0) {
+      x = x[-excl]
+      x.annotated = x.annotated[-excl]
+      if (!is.null(cells)) { cells = cells[-excl] } 
+      else { x.up=x.up[-excl]; x.down=x.down[-excl] }
+      if (!is.null(x.col)) { x.col = x.col[-excl] }
+    }
+  }
+  
   if (!is.null(cells) ) {
     x.up = sapply(cells, function(x) sum(x > 0) )
     x.down = sapply(cells, function(x) sum(x < 0) )
