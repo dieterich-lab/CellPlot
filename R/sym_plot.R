@@ -1,3 +1,105 @@
+#' @title Sym Plot
+#'
+#' @description 
+#' Plots a split barchart, showing the proportions of two mutually exclusive
+#' sets in relation to a set containing them both. E.g., Gene Ontology terms,
+#' showing the proportions of differentially down-regulated and up-regulated
+#' annotated genes from a perturbation experiment.
+#' The color of the central column elements maps to the value provided in x
+#' (e.g. GO term enrichment). Associated genes may be provided as a list of
+#' vectors of expression values, same as for cell.plot(), or as separate
+#' vectors x.up and x.down, providing the numbers of up- and down-regulated
+#' genes in the same order as x.
+#'
+#' @param x Strictly positive numeric vector.
+#'
+#' @param x.annotated Cardinality of each functional set (e.g. total number of genes annotated
+#' in a given GO term). Must be the same length and order as x.
+#'
+#' @param x.up Vector containing numbers of up-regulated genes in each functional set. Must be the
+#' same length and order as x. Overridden by the cells parameter, if provided.
+#' 
+#' @param x.down Vector containing numbers of down-regulated genes in each functional set. See x.up.
+#'
+#' @param cells List of vectors (e.g. gene logfold-changes). Must be the same length and order as x.
+#' 
+#' @param sort Sort categories by their cardinality. Defaults to FALSE.
+#'
+#' @param x.mar Left and right margins as fractions of plot width. Defaults to c(0.2,0.05).
+#'
+#' @param y.mar Lower and upper margins as fractions of plot height. Defaults to c(0.1,0).
+#'
+#' @param bar.lwd Line width of bar elements. Defaults to 2.
+#'
+#' @param bar.scale If not NULL (the default), set bar height to a fixed value relative to the
+#' numeric factor provided. Use to ensure consistency across plots with varying numbers of elements.
+#' 
+#' @param space Free space above and below bars as a fraction of bar height. Defaults to 0.1.
+#' 
+#' @param mid.gap Free space left between the extremes of the central column and the bar elements, as a
+#' fraction of central column width. Defaults to 0.1.
+#' 
+#' @param mid.bounds Lower and upper bound on the color scale mapping of the central column 
+#' (i.e. mapping of x). Defaults to c(0, max(x)).
+#' 
+#' @param mid.col Color scale for mapping of x to the central column elements. Defaults to 
+#' c("white","darkred").
+#' 
+#' @param key.lab Label for color key.
+#'
+#' @param key.n Number of legend boxes for the color key. Defaults to 11.
+#'
+#' @param cols Colors for left and right bars. Defaults to c("deepskyblue2","coral").
+#' 
+#' @param group.labels Labels for left bars, central column, and right bars. Defaults to
+#' c("Downregulated","Annotated","Upregulated").
+#'
+#' @param group.cex Scaling factor for group labels. Defaults to 0.8.
+#' 
+#' @param axis.cex Scaling factor for axis labeling. Defaults to 0.8.
+#' 
+#' @param mid.cex Scaling factor for central column labeling. Defaults to 0.8.
+#' 
+#' @param label.cex Scaling factor for functional group labels. Defaults to 1.
+#' 
+#' @param ticksize Spacing between x-axis ticks. Defaults to 10.
+#'
+#' @author 
+#' Robert Sehlke [aut]\cr
+#' Sven E. Templer [ctb]
+#'
+#' @examples
+#' \dontrun{
+#' ## Generate random positive vector and name it
+#' x = sort( runif(16, min = 1, max = 3), decreasing = T )
+#' names(x) = paste("GO Term",1:16)
+#'
+#' ## Label colors
+#' xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
+#'
+#' ## Generate list with random vectors, one for each entry in x
+#' cells = list()
+#' xc = round( runif(16, min=21, max=100) )
+#' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
+#' cells[[9]][1:2] = Inf
+#' cells[[9]][3] = -Inf
+#'
+#' ## Plot with spacers
+#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
+#'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+#'   
+#' ## golub.deg data example:
+#' data(golub.deg)
+#' sym.plot(x = golub.deg$go$go.loge, 
+#' x.annotated = attr(golub.deg$go, "gotab")$Annotated[match( golub.deg$go$go.ids, attr(golub.deg$go, "gotab")$GO.ID)], 
+#' cells = golub.deg$go$deg.logfc)
+#' }
+#'
+
+#' @export
+
+
+
 # EXAMPLE CODE
 if (0) {
   x = sort( runif(16, min = 1, max = 3), decreasing = T )
@@ -15,14 +117,16 @@ if (0) {
   cells[[9]][3] = -Inf
   
   # HERE WE GO
-  rs.sym4go( x, x.ann, cells=cells, x.col = xcolor, sort=F, x.mar=c(0,0) )
+  sym.plot( x, x.ann, cells=cells, x.col = xcolor, sort=F, x.mar=c(0,0) )
 }
 
 
-# SYMPLOT FUNCTIONS -- STILL RATHER MESSY
-
-rs.sym4go = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=NULL, as.percentage=T, sort=T,
-                      x.mar = c(0,0) ) {
+sym.plot = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=NULL, sort=F, main="", 
+                     x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
+                     mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
+                     group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=0.8, mid.cex=0.8, 
+                     label.cex=1, ticksize=10, xlim=NULL, ...) {
+  shading.density=20
   
   # parameter checks
   if ( (is.null(x.down) || is.null(x.up)) && is.null(cells) ) { stop("You must provide either the cells parameter (expression values for members of each term) or numbers of up- and downregulated genes!") }
@@ -30,38 +134,33 @@ rs.sym4go = function( x, x.annotated, x.up=NULL, x.down=NULL, cells=NULL, x.col=
   if ( length(x) != length(x.annotated) ) {  stop("x and x.annotated must contain an equal number of elements.") }
   
   
+  # formatting input
   if (!is.null(cells) ) {
     x.up = sapply(cells, function(x) sum(x > 0) )
     x.down = sapply(cells, function(x) sum(x < 0) )
   }
   
   outframe = matrix(0, nrow=length(x), ncol=5, dimnames = list(names(x),NULL) )
-    for (i in 1:length(x)) {
-      outframe[i,] = c(x.up[i],0,x.annotated[i],0,x.down[i])
-    }
-    if (as.percentage) {
-      #outframe = t( apply(outframe,1,function(x) { x[c(1,5)] = x[c(1,5)] / x[3] * 100 ; return(x) } ) )
-    }
+  for (i in 1:length(x)) {
+    outframe[i,] = c(x.down[i],0,x.annotated[i],0,x.up[i])
+  }
   outframe = as.data.frame(outframe)
   outframe$val = x
-  if (!is.null(x.col)) { outframe$col = x.col }
- 
+  if (!is.null(x.col)) { outframe$col = x.col } else { outframe$col = rep("black",nrow(outframe)) }
+  
   if (sort) {
     outframe = outframe[order(outframe[,3]),]
   } else {
     outframe = outframe[nrow(outframe):1,]
   }
   
-  rs.symplot( outframe[,1:5], label.col = outframe[,7], ticksize = 10, group.labels = c("Downregulated","Annotated","Upregulated"), inclusion = T, gridlines = T,
-              x.mar=x.mar, mid.values=outframe[,6], as.percentage=T, mid.bounds=c(0,ceiling(max(outframe[,6]))), key.lab="log2(GO term enrichment)", bar.scale=1.4)
-}
-
-
-rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=1, shading.density=20, space = 0.1, midgap=0.1, mid.values=NULL, 
-                       mid.bounds=NULL, mid.col=c("white","darkred"), label.col=NULL, key.lab="color key", label.align.left=T, gridlines=T,
-                       cols = c("deepskyblue2","grey","coral"), group.labels=c("Downregulated","Annotated","Upregulated"), 
-                       group.cex=0.8, axis.cex=0.8, mid.cex=0.8, label.cex=1, ticksize=NULL, xlim=NULL, inclusion=F, as.percentage=F, ...) {
-  
+  if(is.null(mid.bounds)) { mid.bounds = c(0,ceiling(max(outframe[,6]))) }
+  symframe = outframe[,1:5]
+  label.col = outframe[,7]
+  inclusion = T
+  as.percentage=T
+  gridlines = T
+  mid.values=outframe[,6]
   yscale = (diff(par("usr")[3:4])/par("pin")[2])
   
   if(!is.null(mid.bounds)) {
@@ -89,11 +188,7 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     while ( xl/ticksize < 1 ) {
       ticksize=ticksize/10
     }
-    xlim=xl+ticksize%%xl
-    
-    print(xl)
-    print(ticksize)
-    
+    xlim=min( xl+ticksize%%xl, 100)
   }
   
   par(xpd=NA)
@@ -107,13 +202,9 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
   midmean = boundmid/3
   
   ybound = c(1,0) + c(-1,1)*y.mar
-  #yscale = par("pin")[1]/par("pin")[2] * diff(par("usr")[1:2])/diff(par("usr")[3:4])
-  #ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) * yscale * 0.4 * bar.scale )
-  
-  # if (!is.null(scaleTo)) { ybound[2] = ybound[1] - ( (ybound[1] - ybound[2]) / scaleTo ) * nrow(symframe) }
   xbound = c(0,1) + c(1,-1)*x.mar
-  x.left = c( xbound[1], (xbound[2]-xbound[1])*(0.5-midgap)+xbound[1] )
-  x.right = c( (xbound[2]-xbound[1])*(0.5+midgap)+xbound[1], xbound[2] )
+  x.left = c( xbound[1], (xbound[2]-xbound[1])*(0.5-mid.gap)+xbound[1] )
+  x.right = c( (xbound[2]-xbound[1])*(0.5+mid.gap)+xbound[1], xbound[2] )
   ysteps = seq( ybound[2], ybound[1], length.out=( nrow(symframe)+1 ) )
   
   if ( !is.null(bar.scale) ) {
@@ -121,7 +212,7 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     ysteps = ybound[2] + c(0, cumsum( rep(0.3 * yscale * bar.scale, nrow(symframe) ) ) )
     
     if ( ybound[2] < par("usr")[3] ) {
-      warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
+      warning("Plotting area too small! Decrease bar.scale or increase vertical space.")
     }
   }
   
@@ -158,7 +249,7 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     midrange = (x.right[1] - x.left[2]) - 2 * midspace
     midspace = ((boundmid - symframe[i,3]) / (2*boundmid) ) * midrange + midspace
     
-    rect( x.left[2], ysteps[i+1] - yspace, x.right[1], ysteps[i] + yspace, border = NA, col=cols[2], density = shading.density, lwd = 2 )
+    rect( x.left[2], ysteps[i+1] - yspace, x.right[1], ysteps[i] + yspace, border = NA, col="grey", density = shading.density, lwd = 2 )
     rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = bar.lwd, col=mid.c[i])
     
     # left all
@@ -168,24 +259,24 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
           ysteps[i] + yspace,
           col=cols[1], lwd = bar.lwd)
     # left subset
-    rect( (bound-symframe[i,2])/bound * (x.left[2]-x.left[1]) + x.left[1], 
-          ysteps[i+1] - yspace,
-          x.left[2],
-          ysteps[i] + yspace,
-          col = "black", lwd = bar.lwd, density=shading.density)
+#     rect( (bound-symframe[i,2])/bound * (x.left[2]-x.left[1]) + x.left[1], 
+#           ysteps[i+1] - yspace,
+#           x.left[2],
+#           ysteps[i] + yspace,
+#           col = "black", lwd = bar.lwd, density=shading.density)
     
     # right all
     rect( x.right[1],
           ysteps[i+1] - yspace,
           sum(symframe[i,4:5])/bound*(x.right[2]-x.right[1]) + x.right[1], 
           ysteps[i] + yspace,
-          col=cols[3], lwd = bar.lwd)
+          col=cols[2], lwd = bar.lwd)
     # right subset
-    rect( x.right[1],
-          ysteps[i+1] - yspace,
-          (sum(symframe[i,4:5])-symframe[i,5]) /bound*(x.right[2]-x.right[1]) + x.right[1], 
-          ysteps[i] + yspace,
-          col = "black", lwd = bar.lwd, density=shading.density)
+#     rect( x.right[1],
+#           ysteps[i+1] - yspace,
+#           (sum(symframe[i,4:5])-symframe[i,5]) /bound*(x.right[2]-x.right[1]) + x.right[1], 
+#           ysteps[i] + yspace,
+#           col = "black", lwd = bar.lwd, density=shading.density)
     
     # TEXT   
     # text middle
@@ -206,7 +297,7 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
   ylegend = ybound[1] + 0.4*yscale
   
   rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], lwd = bar.lwd)
-  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[3], lwd = bar.lwd)
+  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[2], lwd = bar.lwd)
   
   if (!inclusion) {
     rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*2, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.5, lwd = bar.lwd)
@@ -227,13 +318,11 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
   axis(3, pos=ybound[1]+yspace, at = right.axis.at, labels = ticklabels, cex.axis=axis.cex, lwd = bar.lwd, padj = 1 )  
   
   # TITLE
-  title(...)
+  title(main=main)
   
   # COLOR LEGEND IF MID VALUES ARE PROVIDED
   # color legend
-  key.n=11
   if (!is.null(mid.values)) {
-    #midbound = range(mid.values)
     lc = c( left.axis.at[length(left.axis.at)],ybound[2]-2*yspace-ygap,right.axis.at[length(right.axis.at)],ybound[2]-4*yspace )
     absmax = max(abs(midbound))
     lc.min <- min(midbound)
@@ -247,7 +336,6 @@ rs.symplot = function( symframe, x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2,
     lc.range = seq( min(lc.min,midbound[1]), lc.max, length.out=key.n )
     lc.col <- names(midcolmap)[seq(1,length(midcolmap),length.out=key.n)]
     
-    # normalize center zero color and text
     if (key.n %% 2 > 0 && lc.min < 0 && lc.max > 0) {
       i.center <- mean(c(1,key.n))
       lc.col[i.center] <- names(midcolmap.center)

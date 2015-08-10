@@ -34,9 +34,10 @@
 #' ### and GO enrichment analysis:
 #' 
 #' ## install dependencies
-#' install.packages("multtest")
 #' source("http://bioconductor.org/biocLite.R")
 #' biocLite("hu6800.db")
+#' biocLite("multtest")
+#' biocLite("topGO")
 #' 
 #' ## load dependencies
 #' library(plyr)

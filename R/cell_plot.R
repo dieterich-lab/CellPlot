@@ -267,9 +267,16 @@ cell.plot = function(
       lc.col[i.center] <- names(cellcolmap.center)
       lc.range[i.center] <- 0
     }
+    
+    key.num = as.character(round(lc.range,1))
+    if (!is.null(cell.bounds)) {
+      if (cell.bounds[1] < abs(min(lc.range))) { key.num[1] = paste0("<",key.num[1])}
+      if (cell.bounds[2] < abs(max(lc.range))) { key.num[length(key.num)] = paste0(key.num[length(key.num)],">")}
+    }
+    
     rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
     rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=cell.lwd, density = lc.density, border=NA )
-    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=xlab.cex, font=2 )
+    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=key.num, cex=xlab.cex, font=2 )
     text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )
   }
   par(xpd=T)
