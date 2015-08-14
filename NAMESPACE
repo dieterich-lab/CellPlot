@@ -2,4 +2,5 @@
 
 export(cell.plot)
 export(golub.degtest)
+export(sym.plot)
 export(topgo2cellplot)

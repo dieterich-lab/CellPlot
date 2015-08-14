@@ -103,30 +103,6 @@
 #'
 
 #' @export
-
-
-
-# EXAMPLE CODE
-if (0) {
-  x = sort( runif(16, min = 1, max = 3), decreasing = T )
-  x.ann = round(runif(16, min=101,max=200))    # THIS IS NEW
-  names(x) = paste("GO Term",1:16)
-  
-  ## Label colors
-  xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
-  
-  ## Generate list with random vectors, one for each entry in x
-  cells = list()
-  xc = round( runif(16, min=21, max=100) )
-  for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
-  cells[[9]][1:2] = Inf
-  cells[[9]][3] = -Inf
-  
-  # HERE WE GO
-  sym.plot( x, x.ann, cells=cells, x.col = xcolor, sort=F, x.mar=c(0,0) )
-}
-
-
 sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=NULL, sort=F, main="", elem.bounds=NULL, 
                      x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
                      mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="term enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
@@ -263,14 +239,14 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
     midspace = ((boundmid - symframe[i,3]) / (2*boundmid) ) * midrange + midspace
     
     rect( x.left[2], ysteps[i+1] - yspace, x.right[1], ysteps[i] + yspace, border = NA, col="grey", density = shading.density, lwd = 2 )
-    rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = bar.lwd, col=mid.c[i])
+    rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = bar.lwd, col=mid.c[i], border = mid.c[i])
     
     # left all
     rect( (bound-sum(symframe[i,1:2]))/bound * (x.left[2]-x.left[1]) + x.left[1], 
           ysteps[i+1] - yspace,
           x.left[2],
           ysteps[i] + yspace,
-          col=cols[1], lwd = bar.lwd)
+          col=cols[1], border=cols[1], lwd = bar.lwd)
     # left subset
 #     rect( (bound-symframe[i,2])/bound * (x.left[2]-x.left[1]) + x.left[1], 
 #           ysteps[i+1] - yspace,
@@ -283,7 +259,7 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
           ysteps[i+1] - yspace,
           sum(symframe[i,4:5])/bound*(x.right[2]-x.right[1]) + x.right[1], 
           ysteps[i] + yspace,
-          col=cols[2], lwd = bar.lwd)
+          col=cols[2], border=cols[2], lwd = bar.lwd)
     # right subset
 #     rect( x.right[1],
 #           ysteps[i+1] - yspace,
@@ -309,8 +285,8 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
   # I AM LEGEND
   ylegend = ybound[1] + 0.4*yscale
   
-  rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], lwd = bar.lwd)
-  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[2], lwd = bar.lwd)
+  rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], border=cols[1], lwd = bar.lwd)
+  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[2], border=cols[2], lwd = bar.lwd)
   
   if (!inclusion) {
     rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*2, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.5, lwd = bar.lwd)

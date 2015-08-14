@@ -4,20 +4,21 @@
 \alias{cell.plot}
 \title{Cell Plot}
 \usage{
-cell.plot(x, cells, lab.col = NULL, cell.col = c("blue", "white", "red"),
+cell.plot(x, cells, x.col = NULL, cell.col = c("blue", "white", "red"),
   inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0.1),
   y.mar = c(0.08, 0.1), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
-  xlab.cex = 1, xlab.ticks = 5, xlab.yoffset = 0.08, sym = FALSE,
-  cell.lwd = 2, cell.outer = 2, cell.sort = T, cell.limit = 50,
-  cell.bounds = NULL, xlab = "", key = T, key.lab = "Color Key",
-  key.n = 11, spacers = NULL, bar.scale = NULL, ...)
+  xlab.cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
+  cell.outer = 2, cell.sort = T, cell.limit = 30, cell.bounds = NULL,
+  elem.bounds = NULL, xlab = "term enrichment", key = T,
+  key.lab = "differential expression", key.n = 11, spacers = NULL,
+  bar.scale = NULL, gridlines = T, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
 
 \item{cells}{List of vectors. Must be the same length as x.}
 
-\item{lab.col}{Vector of color names. Must be the same length as x. Defaults
+\item{x.col}{Vector of color names. Must be the same length as x. Defaults
 to black.}
 
 \item{cell.col}{Character vector of length 3, specifying colors for the low end, zero, and high
@@ -42,9 +43,7 @@ this value is chosen automatically.}
 
 \item{xlab.cex}{Scaling factor for x-label text size.}
 
-\item{xlab.ticks}{Number of ticks for the x-axis.}
-
-\item{xlab.yoffset}{...}
+\item{xlab.ticks}{Number of ticks for the x-axis..}
 
 \item{sym}{Logical, if \code{TRUE} visualize cell values on a symmetrical scale.}
 
@@ -60,6 +59,9 @@ omitted. Defaults to 50.}
 \item{cell.bounds}{Numeric vector of length 2, specifying lower and upper
 bound for cell value visualization. If set to NULL (the default), these
 values are chosen automatically.}
+
+\item{elem.bounds}{Vector of length 2 specifying a filter on minimum and maximum number of elements
+in a category. Defaults to NULL, in which case no filter is applied.}
 
 \item{xlab}{Label for x-axis.}
 
@@ -109,7 +111,7 @@ cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
 
 ## golub.deg data example:
 data(golub.deg)
-cell.plot(golub.deg$go$go.loge, golub.deg$go$deg.logfc)
+cell.plot(x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
 }
 }
 \author{

@@ -259,26 +259,27 @@ cell.plot = function(
     
     lc.density <- rep(0, key.n)
     if (any(cellinf)) {
-      #lc.range <- c(-Inf, seq( -absmax, absmax, length.out=key.n-2), Inf)
       lc.range <- c(-Inf, seq( lc.min, lc.max, length.out=key.n-2), Inf)
       lc.col <- c(cell.col.inf[1], names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n-2)], cell.col.inf[2])
       lc.density[c(1,length(lc.density))] = inf.shading
+      if (key.n %% 2 > 0 && lc.min < 0 && lc.max > 0) {
+        lc.range = c( -Inf, seq( lc.min, 0, length.out=(key.n-1)/2 ), seq( 0, lc.max, length.out=(key.n-1)/2 )[-1], Inf )
+        print(lc.range)
+      }
     } else {
-      #lc.range = seq( -absmax, absmax, length.out=key.n )
       lc.range = seq( lc.min, lc.max, length.out=key.n )
       lc.col <- names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n)]
-    }
-    # normalize center zero color and text
-    if (key.n %% 2 > 0 && lc.min < 0 && lc.max > 0) {
-      i.center <- mean(c(1,key.n))
-      lc.col[i.center] <- names(cellcolmap.center)
-      lc.range[i.center] <- 0
+      if (key.n %% 2 > 0 && lc.min < 0 && lc.max > 0) {
+        lc.range = c( seq( lc.min, 0, length.out=(key.n-1)/2+1 ), seq( 0, lc.max, length.out=(key.n-1)/2+1 )[-1] )
+        lc.col <- names(cellcolmap)[seq(1,length(cellcolmap),length.out=key.n)]
+      }
     }
     
     key.num = as.character(round(lc.range,1))
     if (!is.null(cell.bounds)) {
-      if (cell.bounds[1] < abs(min(lc.range))) { key.num[1] = paste0("<",key.num[1])}
-      if (cell.bounds[2] < abs(max(lc.range))) { key.num[length(key.num)] = paste0(key.num[length(key.num)],">")}
+      or = range(celldata[!cellinf & !cellmis])
+      if (cell.bounds[1] > min(or)) { key.num[1+(any(cellinf))] = paste0("<",key.num[1+(any(cellinf))])}
+      if (cell.bounds[2] < max(or)) { key.num[length(key.num)-(any(cellinf))] = paste0(key.num[length(key.num)-(any(cellinf))],">")}
     }
     
     rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
