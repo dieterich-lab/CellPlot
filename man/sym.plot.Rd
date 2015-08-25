@@ -27,6 +27,9 @@ same length and order as x. Overridden by the cells parameter, if provided.}
 
 \item{x.down}{Vector containing numbers of down-regulated genes in each functional set. See x.up.}
 
+\item{x.col}{Vector of color names. Must be the same length as x. Defaults
+to black.}
+
 \item{sort}{Sort categories by their cardinality. Defaults to FALSE.}
 
 \item{main}{Title.}
@@ -72,6 +75,10 @@ c("Downregulated","Annotated","Upregulated").}
 \item{lab.cex}{Scaling factor for functional group labels. Defaults to 1.}
 
 \item{ticksize}{Spacing between x-axis ticks. Defaults to 10.}
+
+\item{xlim}{A vector with both X axis limits between 0 and 100.}
+
+\item{...}{Other arguments, ignored.}
 }
 \description{
 Plots a split barchart, showing the proportions of two mutually exclusive

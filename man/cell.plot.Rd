@@ -78,6 +78,8 @@ positions to visually group bars.}
 \item{bar.scale}{Numeric. Set bar height to a fixed value multiplied by this
 parameter. If the plotting area is too small clipping may occur.}
 
+\item{gridlines}{Logical value, if to show vertical grid lines.}
+
 \item{\dots}{Arguments passed through to the title() function. E.g.
 main = "Plot title".}
 }

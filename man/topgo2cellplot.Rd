@@ -28,12 +28,12 @@ the sign of the maximums.}
 \item{p.adj.method}{A character string naming the p value adjustment
 method. Use \code{"none"} to pass through. See \link{p.adjust}.}
 
-\item{topgo.test}{A \code{topGO} test function, e.g. \link{GOFisherTest}.
-Used as \code{testStatistic} argument value in the \link{classicCount-class}
+\item{topgo.test}{A \code{topGO} test function, e.g. \link[topGO]{GOFisherTest}.
+Used as \code{testStatistic} argument value in the \link[topGO]{classicCount-class}
 creator function.}
 
 \item{topgo.test.name}{A character string for the test.
-Used as \code{name} argument value in the \link{classicCount-class}
+Used as \code{name} argument value in the \link[topGO]{classicCount-class}
 creator function.}
 }
 \description{

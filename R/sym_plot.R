@@ -21,6 +21,9 @@
 #' 
 #' @param x.down Vector containing numbers of down-regulated genes in each functional set. See x.up.
 #'
+#' @param x.col Vector of color names. Must be the same length as x. Defaults
+#' to black.
+#'
 #' @param cells List of vectors (e.g. gene logfold-changes). Must be the same length and order as x.
 #' 
 #' @param sort Sort categories by their cardinality. Defaults to FALSE.
@@ -69,6 +72,10 @@
 #' 
 #' @param ticksize Spacing between x-axis ticks. Defaults to 10.
 #'
+#' @param xlim A vector with both X axis limits between 0 and 100.
+#' 
+#' @param ... Other arguments, ignored.
+#' 
 #' @author 
 #' Robert Sehlke [aut]\cr
 #' Sven E. Templer [ctb]

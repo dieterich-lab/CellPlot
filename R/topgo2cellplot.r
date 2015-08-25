@@ -17,15 +17,17 @@
 #' the sign of the maximums.
 #' @param p.adj.method A character string naming the p value adjustment
 #' method. Use \code{"none"} to pass through. See \link{p.adjust}.
-#' @param topgo.test A \code{topGO} test function, e.g. \link{GOFisherTest}.
-#' Used as \code{testStatistic} argument value in the \link{classicCount-class}
+#' @param topgo.test A \code{topGO} test function, e.g. \link[topGO]{GOFisherTest}.
+#' Used as \code{testStatistic} argument value in the \link[topGO]{classicCount-class}
 #' creator function.
 #' @param topgo.test.name A character string for the test.
-#' Used as \code{name} argument value in the \link{classicCount-class}
+#' Used as \code{name} argument value in the \link[topGO]{classicCount-class}
 #' creator function.
 #' 
 #' @author 
 #' Sven E. Templer [aut]
+#' 
+#' @name topgo2cellplot
 
 #' @export
 topgo2cellplot <- function (
@@ -84,3 +86,5 @@ topgo2cellplot <- function (
   ret$deg.logp <- setNames(ret$deg.logp, id.names)
   return(ret)
 }
+
+GOFisherTest <- NULL

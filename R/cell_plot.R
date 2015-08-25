@@ -71,6 +71,8 @@
 #' parameter. If the plotting area is too small clipping may occur.
 #'
 #' @param sym Logical, if \code{TRUE} visualize cell values on a symmetrical scale.
+#' 
+#' @param gridlines Logical value, if to show vertical grid lines.
 #'
 #' @param \dots Arguments passed through to the title() function. E.g.
 #' main = "Plot title".
