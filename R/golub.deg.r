@@ -1,15 +1,20 @@
-#' @title Data of DEG and GO enrichment analysis of \code{golub} data
+#' @title Data with DEG and GO enrichment analysis for \code{golub} dataset
 #' 
 #' @details Microarray gene expression data from leukemia study of Golub et al. (1999).
 #' Processed as described in Dudoit et al. (2002). Adapted from package 
 #' \code{multtest}.
-#' Differential gene expression analysis and GO annotation and enrichment was 
-#' performed as shown in the example section.
+#' Differential gene expression was performed using a Student t-test to compare
+#' the two groups. See details in \link{golub.degtest}.
+#' GO annotation has been performed with the \code{annotate} and \code{hu6800.db}
+#' packages from Bioconductor. The \code{topGO} package was used to perform
+#' a GO enrichment test based on Fisher's exact test. Data of the DEG and GO
+#' enrichment was merged with the provided \link{topgo2cellplot} function.
+#' The code to create the data object is shown in the examples section.
 #' 
 #' @format A list containing 2 slots:
 #' \describe{
 #'   \item{\code{stats}}{A data.frame with the gene expression statistics.}
-#'   \item{\code{go}}{A list with the GO enrichment and DEG statistics.}
+#'   \item{\code{go}}{A list with the merged DEG and GO enrichment results.}
 #' }
 #' 
 #' @references
@@ -24,7 +29,7 @@
 #' doi:10.1198/016214502753479248
 #' 
 #' @author 
-#' Sven E. Templer [aut]
+#' Sven E. Templer [aut]\cr
 #' Authors of multtest package [ctb]
 #' 
 #' @examples
@@ -55,23 +60,29 @@
 #'                gene.index = as.integer(golub.gnames[,1]),
 #'                stringsAsFactors = FALSE))
 #'                
-#' ## annotation and GO enrichment test
+#' ## GO annotation
 #' golub.deg$go <- select(hu6800.db, golub.deg$stats$gene, 
 #'                        c("PROBEID","ALIAS","GO","ENSEMBL","ENTREZID"))
 #' golub.deg$go <- dlply(subset(golub.deg$go, ONTOLOGY == "BP"), "PROBEID", 
 #'                       function (a) unique(a$GO))
+#'                       
+#' ## build topGO object with GO topology
 #' golub.deg$go <- new(
 #'   "topGOdata", ontology="BP", description='golub.deg',
 #'   allGenes=setNames(golub.deg$stats$p.adj, golub.deg$stats$gene),
 #'   geneSelectionFun=function(allScore){allScore <= 0.05},
 #'   annotationFun=annFUN.gene2GO, gene2GO=golub.deg$go)
+#'   
+#' ## GO enrichment test and data merge with DEG results
 #' golub.deg$go <- topgo2cellplot(golub.deg$go, golub.deg$stats$log2fc, 
 #'                                golub.deg$stats$gene)
-#' 
+#'
+#' ## store data
+#' # save(golub.deg, file = "data/golub.deg.rdata")
+#' # str(golub.deg$go, list.len = 8)
 #' }
 #' 
 
 "golub.deg"
 
-#save(golub.deg, file = "data/golub.deg.rdata")
-#str(golub.deg$go, list.len = 5)
+golub.deg <- NULL
