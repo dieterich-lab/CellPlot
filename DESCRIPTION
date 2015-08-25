@@ -6,5 +6,5 @@ Date: 2015-07-21
 Author: Robert Sehlke, Sven E. Templer
 Maintainer: Robert Sehlke <rsehlke@age.mpg.de>
 Description: Plot for simultaneous visualization of functional enrichment and expression values.
-Suggests: topGO
+Suggests: topGO, multtest, plyr, annotate, hu6800.db
 License: GPL-2
