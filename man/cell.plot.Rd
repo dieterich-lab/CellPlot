@@ -9,8 +9,8 @@ cell.plot(x, cells, x.col = NULL, cell.col = c("blue", "white", "red"),
   y.mar = c(0.08, 0.1), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
   xlab.cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
   cell.outer = 2, cell.sort = T, cell.limit = 30, cell.bounds = NULL,
-  elem.bounds = NULL, xlab = "term enrichment", key = T,
-  key.lab = "differential expression", key.n = 11, spacers = NULL,
+  elem.bounds = NULL, xlab = "GO Term Enrichment", key = T,
+  key.lab = "Differential Expression", key.n = 11, spacers = NULL,
   bar.scale = NULL, gridlines = T, ...)
 }
 \arguments{
@@ -106,12 +106,15 @@ cells[[9]][1:2] = Inf
 cells[[9]][3] = -Inf
 
 ## Plot with spacers
-cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
-  main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+cell.plot( x, cells,
+           xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
+           main="Cell Plot Demo", xlab="log(enrichment)" )
 
 ## golub.deg data example:
 data(golub.deg)
-cell.plot(x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
+cell.plot( x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc,
+           elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0),
+           main = "Golub et al. DEG and GO Enrichment" )
 }
 }
 \author{
