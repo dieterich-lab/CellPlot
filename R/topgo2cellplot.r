@@ -17,6 +17,12 @@
 #' the sign of the maximums.
 #' @param p.adj.method A character string naming the p value adjustment
 #' method. Use \code{"none"} to pass through. See \link{p.adjust}.
+#' @param topgo.test A \code{topGO} test function, e.g. \link{GOFisherTest}.
+#' Used as \code{testStatistic} argument value in the \link{classicCount-class}
+#' creator function.
+#' @param topgo.test.name A character string for the test.
+#' Used as \code{name} argument value in the \link{classicCount-class}
+#' creator function.
 #' 
 #' @author 
 #' Sven E. Templer [aut]
@@ -24,12 +30,13 @@
 #' @export
 topgo2cellplot <- function (
   go, deg.logfc = NULL, deg.genes = NULL, n = 30, ids = FALSE, 
-  replace.infinite = FALSE, p.adj.method = 'fdr')
+  replace.infinite = FALSE, p.adj.method = 'fdr',
+  topgo.test = GOFisherTest, topgo.test.name = "Fisher test")
 {
   if (!requireNamespace("topGO")) stop("Install package topGO")
   # test GO enrichment
   go.test <- topGO::getSigGroups(
-    go, new("classicCount", testStatistic = topGO::GOFisherTest, name = "Fisher test"))
+    go, new("classicCount", testStatistic = topgo.test, name = topgo.test.name))
   go.table <- topGO::GenTable(go, p=go.test, orderBy="p", ranksOf="p", topNodes=n)
   go.table$p <- as.numeric(go.table$p)
   gn <- length(go@graph@nodes)
@@ -69,11 +76,11 @@ topgo2cellplot <- function (
     go.loge   = ret.loge[o],
     go.ids    = ret.ids[o],
     go.terms  = ret.term[o],
+    go.table  = go.table[o,],
     n         = ret.n[o],
     genes     = ret.genes[o])
   id.names <- if (ids) paste(ret$go.terms, ret$go.ids) else ret$go.terms
   ret$go.loge <- setNames(ret$go.loge, id.names)
   ret$deg.logp <- setNames(ret$deg.logp, id.names)
-  attr(ret, "gotab") <- go.table
   return(ret)
 }

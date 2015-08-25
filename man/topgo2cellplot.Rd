@@ -5,7 +5,8 @@
 \title{GO enrichment test and conversion of topGO data to list for cellplot}
 \usage{
 topgo2cellplot(go, deg.logfc = NULL, deg.genes = NULL, n = 30,
-  ids = FALSE, replace.infinite = FALSE, p.adj.method = "fdr")
+  ids = FALSE, replace.infinite = FALSE, p.adj.method = "fdr",
+  topgo.test = GOFisherTest, topgo.test.name = "Fisher test")
 }
 \arguments{
 \item{go}{A \code{topGO} object.}
@@ -26,6 +27,14 @@ the sign of the maximums.}
 
 \item{p.adj.method}{A character string naming the p value adjustment
 method. Use \code{"none"} to pass through. See \link{p.adjust}.}
+
+\item{topgo.test}{A \code{topGO} test function, e.g. \link{GOFisherTest}.
+Used as \code{testStatistic} argument value in the \link{classicCount-class}
+creator function.}
+
+\item{topgo.test.name}{A character string for the test.
+Used as \code{name} argument value in the \link{classicCount-class}
+creator function.}
 }
 \description{
 The function performs the GO enrichment tests (a Fisher test).
