@@ -88,24 +88,27 @@
 #' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 #' cells[[9]][1:2] = Inf
 #' cells[[9]][3] = -Inf
+#' cells.annotated <- sapply(cells, length)
 #'
 #' ## Plot with spacers
-#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
-#'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
+#' sym.plot( x, cells, cells.annotated, 
+#'           xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
+#'           main="Cell Plot Demo", xlab="log(enrichment)" )
 #'   
 #' ## golub.deg data example:
 #' data(golub.deg)
-#' 
-#' sym.plot(x = golub.deg$go$go.loge, 
-#' x.annotated = attr(golub.deg$go, "gotab")$Annotated[match( golub.deg$go$go.ids, attr(golub.deg$go, "gotab")$GO.ID)], 
-#' cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
+#' sym.plot( x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc,
+#'           x.annotated = golub.deg$go$go.table$Annotated, 
+#'           elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0),
+#'           main = "Golub et al. DEG and GO Enrichment" )
 #' }
+#' 
 #'
 
 #' @export
 sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=NULL, sort=F, main="", elem.bounds=NULL, 
                      x.mar=c(0.2,0.05), y.mar = c(0.1,0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
-                     mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="term enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
+                     mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO Term Enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
                      group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=0.8, mid.cex=0.8, 
                      lab.cex=1, ticksize=10, xlim=NULL, ...) {
   shading.density=20
