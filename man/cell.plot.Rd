@@ -7,11 +7,11 @@
 cell.plot(x, cells, x.col = NULL, cell.col = c("blue", "white", "red"),
   inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0),
   y.mar = c(0.1, 0), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
-  xlab.cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
-  cell.outer = 2, cell.sort = T, cell.limit = 30, cell.bounds = NULL,
-  elem.bounds = NULL, xlab = "GO Term Enrichment", key = T,
-  key.lab = "Differential Expression", key.n = 11, spacers = NULL,
-  bar.scale = 1, gridlines = T, ...)
+  axis.cex = 1, cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
+  cell.outer = 2, grid.lwd = 2, cell.sort = T, cell.limit = 30,
+  cell.bounds = NULL, elem.bounds = NULL, xlab = "GO Term Enrichment",
+  key = T, key.lab = "Differential Expression", key.n = 11, key.cex = 1,
+  spacers = NULL, bar.scale = NULL, gridlines = T, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -41,7 +41,9 @@ this value is chosen automatically.}
 
 \item{xdes.cex}{Scaling factor for key legend text size.}
 
-\item{xlab.cex}{Scaling factor for x-label text size.}
+\item{axis.cex}{Scaling factor for x-label text size.}
+
+\item{cex}{Scales all character expansion factors. Defaults to 1.}
 
 \item{xlab.ticks}{Number of ticks for the x-axis..}
 
@@ -50,6 +52,8 @@ this value is chosen automatically.}
 \item{cell.lwd}{Size of the border of individual cells. Defaults to 1.}
 
 \item{cell.outer}{Size of outer border around bars. Defaults to 2.}
+
+\item{grid.lwd}{Line width of grid lines. Defaults to 2.}
 
 \item{cell.sort}{Should cell values be sorted? Defaults to TRUE.}
 
@@ -71,6 +75,8 @@ in a category. Defaults to NULL, in which case no filter is applied.}
 
 \item{key.n}{Number of legend boxes for the color key. Minimum is 3 (5 when
 infinite values are present).}
+
+\item{key.cex}{Scaling factor for color key label. Defaults to 1.}
 
 \item{spacers}{Numeric vector. Inserts empty space after the specified
 positions to visually group bars.}

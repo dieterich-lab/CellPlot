@@ -21,9 +21,6 @@
 #' 
 #' @param x.down Vector containing numbers of down-regulated genes in each functional set. See x.up.
 #'
-#' @param x.col Vector of color names. Must be the same length as x. Defaults
-#' to black.
-#'
 #' @param cells List of vectors (e.g. gene logfold-changes). Must be the same length and order as x.
 #' 
 #' @param sort Sort categories by their cardinality. Defaults to FALSE.
@@ -35,9 +32,9 @@
 #'
 #' @param x.mar Left and right margins as fractions of plot width. Defaults to c(0.2,0.05).
 #'
-#' @param y.mar Top and bottom margins as fractions of plot height. Defaults to c(0.1,0).
+#' @param y.mar Lower and upper margins as fractions of plot height. Defaults to c(0.1,0).
 #'
-#' @param bar.lwd Line width of bar elements. Defaults to 2.
+#' @param grid.lwd Line width of grid lines, color key borders, and bar axis. Defaults to 2.
 #'
 #' @param bar.scale If not NULL (the default), set bar height to a fixed value relative to the
 #' numeric factor provided. Use to ensure consistency across plots with varying numbers of elements.
@@ -64,65 +61,63 @@
 #'
 #' @param group.cex Scaling factor for group labels. Defaults to 0.8.
 #' 
-#' @param axis.cex Scaling factor for axis labeling. Defaults to 0.8.
+#' @param axis.cex Scaling factor for axis labeling. Defaults to 1.
 #' 
 #' @param mid.cex Scaling factor for central column labeling. Defaults to 0.8.
 #' 
 #' @param lab.cex Scaling factor for functional group labels. Defaults to 1.
 #' 
+#' @param key.cex Scaling factor for color key label. Defaults to 1.
+#' 
+#' @param cex Scales all character expansion factors. Defaults to 1.
+#' 
 #' @param ticksize Spacing between x-axis ticks. Defaults to 10.
 #'
-#' @param xlim A vector with both X axis limits between 0 and 100.
-#' 
-#' @param ... Other arguments, ignored.
-#' 
 #' @author 
 #' Robert Sehlke [aut]\cr
 #' Sven E. Templer [ctb]
 #'
 #' @examples
 #' \dontrun{
-#' 
-#' ### Random data example
-#' 
-#' # Generate random positive vector and name it
+#' ## Generate random positive vector and name it
 #' x = sort( runif(16, min = 1, max = 3), decreasing = T )
 #' names(x) = paste("GO Term",1:16)
 #'
-#' # Label colors
+#' ## Label colors
 #' xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
 #'
-#' # Generate list with random vectors, one for each entry in x
+#' ## Generate list with random vectors, one for each entry in x
 #' cells = list()
 #' xc = round( runif(16, min=21, max=100) )
 #' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 #' cells[[9]][1:2] = Inf
 #' cells[[9]][3] = -Inf
-#' cells.annotated <- sapply(cells, length)
 #'
-#' # Plot with spacers
-#' sym.plot( x, cells, cells.annotated, 
-#'           xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
-#'           main="Cell Plot Demo", xlab="log(enrichment)" )
+#' ## Plot with spacers
+#' cell.plot(x, cells, xcolor, spacers = c(4,8), xlab.ticks = 5,
+#'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 #'   
-#' ### golub.deg data example
+#' ## golub.deg data example:
+#' data(golub.deg)
 #' 
-#' data(golubstat)
-#' x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
-#' x <- head(x, 10)
-#' sym.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, x.annotated = x$annotated,
-#'           main = "Golub et al. (1999) - Gene Ontology Enrichment" )
+#' sym.plot(x = golub.deg$go$go.loge, 
+#' x.annotated = attr(golub.deg$go, "gotab")$Annotated[match( golub.deg$go$go.ids, attr(golub.deg$go, "gotab")$GO.ID)], 
+#' cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
 #' }
-#' 
 #'
 
 #' @export
 sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=NULL, sort=F, main="", elem.bounds=NULL, 
-                     x.mar=c(0.2, 0), y.mar = c(0.2, 0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
-                     mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO Term Enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
-                     group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=0.8, mid.cex=0.8, 
-                     lab.cex=1, ticksize=10, xlim=NULL, ...) {
+                     x.mar=c(0.2,0.05), y.mar = c(0.1,0), grid.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
+                     mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO Term enrichment", key.n = 11, key.cex=1, cols = c("deepskyblue2","coral"), 
+                     group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=1, mid.cex=0.8, 
+                     lab.cex=1, cex=1, ticksize=10, xlim=NULL, ...) {
   shading.density=20
+  lab.cex = lab.cex * cex
+  group.cex = group.cex * cex
+  axis.cex = axis.cex * cex
+  mid.cex = mid.cex * cex
+  key.cex = key.cex * cex
   
   # parameter checks
   if ( (is.null(x.down) || is.null(x.up)) && is.null(cells) ) { stop("You must provide either the cells parameter (expression values for members of each term) or numbers of up- and downregulated genes!") }
@@ -240,9 +235,9 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
   
   # GRID
   if (gridlines) {
-    segments(c(left.axis.at,right.axis.at), ybound[2]-yspace, c(left.axis.at,right.axis.at), ybound[1]+yspace, col="grey", lwd = bar.lwd )
-    segments(left.axis.at[length(left.axis.at)],ybound[2]-yspace,left.axis.at[1],ybound[2]-yspace, col="grey", lwd = bar.lwd)
-    segments(right.axis.at[length(right.axis.at)],ybound[2]-yspace,right.axis.at[1],ybound[2]-yspace, col="grey", lwd = bar.lwd)
+    segments(c(left.axis.at,right.axis.at), ybound[2]-yspace, c(left.axis.at,right.axis.at), ybound[1]+yspace, col="grey", lwd = grid.lwd )
+    segments(left.axis.at[length(left.axis.at)],ybound[2]-yspace,left.axis.at[1],ybound[2]-yspace, col="grey", lwd = grid.lwd)
+    segments(right.axis.at[length(right.axis.at)],ybound[2]-yspace,right.axis.at[1],ybound[2]-yspace, col="grey", lwd = grid.lwd)
   }
   
   for (i in 1:nrow(symframe)) {
@@ -253,33 +248,33 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
     midspace = ((boundmid - symframe[i,3]) / (2*boundmid) ) * midrange + midspace
     
     rect( x.left[2], ysteps[i+1] - yspace, x.right[1], ysteps[i] + yspace, border = NA, col="grey", density = shading.density, lwd = 2 )
-    rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = bar.lwd, col=mid.c[i], border = mid.c[i])
+    rect( x.left[2]+midspace, ysteps[i+1] - yspace, x.right[1]-midspace, ysteps[i] + yspace, lwd = 0, col=mid.c[i], border = mid.c[i])
     
     # left all
     rect( (bound-sum(symframe[i,1:2]))/bound * (x.left[2]-x.left[1]) + x.left[1], 
           ysteps[i+1] - yspace,
           x.left[2],
           ysteps[i] + yspace,
-          col=cols[1], border=cols[1], lwd = bar.lwd)
+          col=cols[1], border=cols[1], lwd = 0)
     # left subset
 #     rect( (bound-symframe[i,2])/bound * (x.left[2]-x.left[1]) + x.left[1], 
 #           ysteps[i+1] - yspace,
 #           x.left[2],
 #           ysteps[i] + yspace,
-#           col = "black", lwd = bar.lwd, density=shading.density)
+#           col = "black", lwd = grid.lwd, density=shading.density)
     
     # right all
     rect( x.right[1],
           ysteps[i+1] - yspace,
           sum(symframe[i,4:5])/bound*(x.right[2]-x.right[1]) + x.right[1], 
           ysteps[i] + yspace,
-          col=cols[2], border=cols[2], lwd = bar.lwd)
+          col=cols[2], border=cols[2], lwd = 0)
     # right subset
 #     rect( x.right[1],
 #           ysteps[i+1] - yspace,
 #           (sum(symframe[i,4:5])-symframe[i,5]) /bound*(x.right[2]-x.right[1]) + x.right[1], 
 #           ysteps[i] + yspace,
-#           col = "black", lwd = bar.lwd, density=shading.density)
+#           col = "black", lwd = grid.lwd, density=shading.density)
     
     # TEXT   
     # text middle
@@ -299,17 +294,17 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
   # I AM LEGEND
   ylegend = ybound[1] + 0.4*yscale
   
-  rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], border=cols[1], lwd = bar.lwd)
-  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[2], border=cols[2], lwd = bar.lwd)
+  rect(x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, col=cols[1], border=cols[1], lwd = 0)
+  rect(x.right[1], ylegend+ygap*1.8, x.right[2]-(x.right[2]-x.right[1])*0.1, ylegend+ygap*0.7, col=cols[2], border=cols[2], lwd = 0)
   
   if (!inclusion) {
-    rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*2, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.5, lwd = bar.lwd)
+    rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*2, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.5, lwd = grid.lwd)
     
-    rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, lwd = bar.lwd, col="black", density=shading.density)
-    rect(x.right[1], ylegend+ygap*1.8, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.7, lwd = bar.lwd, col="black", density=shading.density)
+    rect(x.left[2]-(x.left[2]-x.left[1])*0.2, ylegend+ygap*1.8, x.left[2], ylegend+ygap*0.7, lwd = grid.lwd, col="black", density=shading.density)
+    rect(x.right[1], ylegend+ygap*1.8, x.right[1]+(x.left[2]-x.left[1])*0.2, ylegend+ygap*0.7, lwd = grid.lwd, col="black", density=shading.density)
     
   } else {
-    rect(x.left[1]+(x.left[2]-x.left[1])*0.05, ylegend+ygap*2, x.right[2]-(x.right[2]-x.right[1])*0.05, ylegend+ygap*0.5, lwd = bar.lwd)
+    rect(x.left[1]+(x.left[2]-x.left[1])*0.05, ylegend+ygap*2, x.right[2]-(x.right[2]-x.right[1])*0.05, ylegend+ygap*0.5, lwd = grid.lwd)
   }
   
   text( x.left[1]+(x.left[2]-x.left[1])*0.1, ylegend + ygap * 1.25, group.labels[1], pos = 4, font=2, cex = group.cex )
@@ -317,8 +312,8 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
   text( (xbound[2]-xbound[1])/2 + xbound[1], ylegend + ygap * 1.25, group.labels[2], font=2, cex = group.cex )
   
   # AXIS
-  axis(3, pos=ybound[1]+yspace, at = left.axis.at, labels = ticklabels, cex.axis=axis.cex, lwd = bar.lwd, padj = 1 )
-  axis(3, pos=ybound[1]+yspace, at = right.axis.at, labels = ticklabels, cex.axis=axis.cex, lwd = bar.lwd, padj = 1 )  
+  axis(3, pos=ybound[1]+yspace, at = left.axis.at, labels = ticklabels, cex.axis=axis.cex, lwd = grid.lwd, padj = 0.5 * (1/cex) * (1/axis.cex) )
+  axis(3, pos=ybound[1]+yspace, at = right.axis.at, labels = ticklabels, cex.axis=axis.cex, lwd = grid.lwd, padj = 0.5 * (1/cex) * (1/axis.cex) )  
   
   # TITLE
   title(main=main)
@@ -344,9 +339,9 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
       lc.col[i.center] <- names(midcolmap.center)
       lc.range[i.center] <- 0
     }
-    rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=bar.lwd )
-    rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=bar.lwd, density = lc.density, border=NA )
-    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=mid.cex, font=2 )
-    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=mid.cex)*1.5 , labels=key.lab, pos=1, cex=mid.cex )
+    rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=grid.lwd )
+    rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=grid.lwd, density = lc.density, border=NA )
+    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=round(lc.range,1), cex=axis.cex, font=2 )
+    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=axis.cex)*1.5 , labels=key.lab, pos=1, cex=key.cex )
   }
 }

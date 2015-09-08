@@ -35,13 +35,17 @@
 #'
 #' @param xdes.cex Scaling factor for key legend text size.
 #'
-#' @param xlab.cex Scaling factor for x-label text size.
-#'
+#' @param axis.cex Scaling factor for x-label text size.
+#' 
+#' @param cex Scales all character expansion factors. Defaults to 1.
+#' 
 #' @param xlab.ticks Number of ticks for the x-axis..
 #'
 #' @param cell.lwd Size of the border of individual cells. Defaults to 1.
 #'
 #' @param cell.outer Size of outer border around bars. Defaults to 2.
+#' 
+#' @param grid.lwd Line width of grid lines. Defaults to 2.
 #'
 #' @param cell.sort Should cell values be sorted? Defaults to TRUE.
 #'
@@ -63,6 +67,8 @@
 #'
 #' @param key.n Number of legend boxes for the color key. Minimum is 3 (5 when
 #' infinite values are present).
+#' 
+#' @param key.cex Scaling factor for color key label. Defaults to 1.
 #'
 #' @param spacers Numeric vector. Inserts empty space after the specified
 #' positions to visually group bars.
@@ -118,10 +124,15 @@
 #' @export
 cell.plot = function(
   x, cells, x.col=NULL, cell.col=c("blue","white","red"),
-  inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2, 0), y.mar = c(0.1, 0), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
-  sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=30, cell.bounds=NULL, elem.bounds=NULL, xlab="GO Term Enrichment",
-  key=T, key.lab="Differential Expression", key.n=11, spacers=NULL, bar.scale=1, gridlines=T, ... )
+  inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2, 0), y.mar = c(0.1, 0), x.bound=NULL, lab.cex = 1, xdes.cex=1, axis.cex=1, cex=1, xlab.ticks=5,
+  sym=FALSE, cell.lwd=2, cell.outer=2, grid.lwd = 2, cell.sort=T, cell.limit=30, cell.bounds=NULL, elem.bounds=NULL, xlab="GO Term Enrichment",
+  key=T, key.lab="Differential Expression", key.n=11, key.cex=1, spacers=NULL, bar.scale=NULL, gridlines=T, ... )
 {
+  lab.cex = lab.cex * cex
+  axis.cex = axis.cex * cex
+  xdes.cex = xdes.cex * cex
+  key.cex = key.cex * cex
+  
   # parameter checks
   if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
     stop("x.bound must be a positive numeric value")
@@ -200,11 +211,11 @@ cell.plot = function(
   
   # GRID
   if (gridlines) {
-    segments(axis.at, ybound[2]-yspace, axis.at, ybound[1]+0.015, col="grey", lwd = cell.outer )
+    segments(axis.at, ybound[2]-yspace, axis.at, ybound[1]+0.015, col="grey", lwd = grid.lwd )
     #segments(left.axis.at[length(left.axis.at)],ybound[2]-yspace,left.axis.at[1],ybound[2]-yspace, col="grey", lwd = bar.lwd)
-    segments(axis.at[length(axis.at)],ybound[2]-yspace,axis.at[1],ybound[2]-yspace, col="grey", lwd = cell.outer)
+    segments(axis.at[length(axis.at)],ybound[2]-yspace,axis.at[1],ybound[2]-yspace, col="grey", lwd = grid.lwd)
   }
-  axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=xlab.cex, padj=0.5, lwd=cell.outer )
+  axis(3, pos=ybound[1]+0.015, at = axis.at, labels = axis.lab, cex.axis=axis.cex, padj=0.5 * (1/cex) * (1/axis.cex), lwd=cell.outer )
   
   for (i in 1:length(x)) {
     bar.n <- length(cells[[i]])
@@ -253,7 +264,7 @@ cell.plot = function(
   
   title( ... )
   # XAXIS DESIGNATION
-  text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = xlab.cex)*2, labels=xlab, pos=3, cex=xdes.cex )
+  text( (xbound[1]+xbound[2])/2, ybound[1]+0.015+strheight("0",cex = axis.cex)*2, labels=xlab, pos=3, cex=xdes.cex )
   segments( xbound[1], ybound[1]+0.015, xbound[1], ybound[2]-yspace, lwd=cell.outer)
   
   # color legend
@@ -294,8 +305,8 @@ cell.plot = function(
     
     rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col=lc.col, lwd=cell.outer )
     rect( lc.xsteps[-(key.n+1)]-lc.xgap*.1, lc[2], lc.xsteps[-1]+lc.xgap*.1, lc[4], col="black", lwd=cell.lwd, density = lc.density, border=NA )
-    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=key.num, cex=xlab.cex, font=2 )
-    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=xlab.cex)*1.5 , labels=key.lab, pos=1, cex=xdes.cex )
+    text( (lc.xsteps[-(key.n+1)]+lc.xsteps[-1])/2, lc[2], pos=1, labels=key.num, cex=axis.cex, font=2 )
+    text( (xbound[1]+xbound[2])/2, lc[2]-strheight("0",cex=axis.cex)*1.5 , labels=key.lab, pos=1, cex=key.cex )
   }
   par(xpd=T)
 }
