@@ -83,39 +83,44 @@
 #'
 #' @examples
 #' \dontrun{
-#' ## Generate random positive vector and name it
+#' 
+#' ### Random data example
+#' 
+#' # Generate random positive vector and name it
 #' x = sort( runif(16, min = 1, max = 3), decreasing = T )
 #' names(x) = paste("GO Term",1:16)
 #'
-#' ## Label colors
+#' # Label colors
 #' xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
 #'
-#' ## Generate list with random vectors, one for each entry in x
+#' # Generate list with random vectors, one for each entry in x
 #' cells = list()
 #' xc = round( runif(16, min=21, max=100) )
 #' for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 #' cells[[9]][1:2] = Inf
 #' cells[[9]][3] = -Inf
 #' 
-#' ## Plot with spacers
+#' # Plot with spacers
 #' cell.plot( x, cells,
 #'            xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
 #'            main="Cell Plot Demo", xlab="log(enrichment)" )
 #'   
-#' ## golub.deg data example:
-#' data(golub.deg)
-#' cell.plot( x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc, 
-#'            elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0),
-#'            main = "Golub et al. DEG and GO Enrichment" )
+#' ### golubstat data example
+#' 
+#' data(golubstat)
+#' x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+#' x <- head(x, 10)
+#' cell.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, 
+#'            main = "Golub et al. (1999) - Gene Ontology Enrichment" )
 #' }
 #'
 
 #' @export
 cell.plot = function(
   x, cells, x.col=NULL, cell.col=c("blue","white","red"),
-  inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2,0.1), y.mar = c(0.08,0.1), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
+  inf.shading = 30/cell.lwd,  space=0.1, x.mar=c(0.2, 0), y.mar = c(0.1, 0), x.bound=NULL, lab.cex = 1, xdes.cex=1, xlab.cex=1, xlab.ticks=5,
   sym=FALSE, cell.lwd=2, cell.outer=2, cell.sort=T, cell.limit=30, cell.bounds=NULL, elem.bounds=NULL, xlab="GO Term Enrichment",
-  key=T, key.lab="Differential Expression", key.n=11, spacers=NULL, bar.scale=NULL, gridlines=T, ... )
+  key=T, key.lab="Differential Expression", key.n=11, spacers=NULL, bar.scale=1, gridlines=T, ... )
 {
   # parameter checks
   if(!is.null(x.bound)){ if(!(is.numeric(x.bound) && (x.bound > 0)) ) {
@@ -142,23 +147,21 @@ cell.plot = function(
   #if (is.null(xlab.ticks)) { xlab.ticks = round( max(x) / 10, digits = 1) }
   #ticksize = xlab.ticks
   ybound = c(1,0) + c(-1,1)*y.mar
+
+  # scale  
+  ysteps = ybound[1] - cumsum( rep(0.3 * yscale * bar.scale, length(x)+1+ifelse(is.null(spacers), 0, length(spacers)) ) )
+  ybound[2] = min(ysteps, ybound[2])
+  if ( ybound[2] < par("usr")[3] ) {
+    warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
+  }
   
-  xbound <- ysteps <- 0:1
-  if ( !is.null(bar.scale) ) {
-      ysteps = ybound[1] - cumsum( rep(0.3 * yscale * bar.scale, length(x)+1+ifelse(is.null(spacers), 0, length(spacers)) ) )
-      ybound[2] = min(ysteps)
-      if ( ybound[2] < par("usr")[3] ) {
-        warning("Plotting area too small! Decrease bar.scale.fixed or increase vertical space.")
-      }
-      
-    xbound = c(0,1) + c(1,-1)*x.mar
-    if (is.null(spacers)) {
-      ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1 ) )
-    } else {
-      spacers = spacers + 1:length(spacers) + 1
-      ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1+length(spacers) ) )
-      ysteps = ysteps[-spacers]
-    }
+  xbound = c(0,1) + c(1,-1)*x.mar
+  if (is.null(spacers)) {
+    ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1 ) )
+  } else {
+    spacers = spacers + 1:length(spacers) + 1
+    ysteps = seq( ybound[1], ybound[2], length.out=( length(x)+1+length(spacers) ) )
+    ysteps = ysteps[-spacers]
   }
 
   ygap = abs(ysteps[1]-ysteps[2])
@@ -207,7 +210,8 @@ cell.plot = function(
     bar.n <- length(cells[[i]])
     bar.nreal <- sum(!is.na(cells[[i]]))
     xsteps = seq(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1], length.out=(bar.n+1))
-    if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { xsteps = seq(xbound[1], (x[i]/x.bound)*(xbound[2]-xbound[1])+xbound[1], length.out=(bar.n+1)) }
+    if (!is.null(x.bound) && is.numeric(x.bound) && (x.bound > 0)) { 
+      xsteps = seq(xbound[1], (x[i]/x.bound)*(xbound[2]-xbound[1])+xbound[1], length.out=(bar.n+1)) }
     
     if (is.null(cells)) { xsteps = c(xbound[1], (x[i]/max(x))*(xbound[2]-xbound[1])+xbound[1]) }
     # row labels

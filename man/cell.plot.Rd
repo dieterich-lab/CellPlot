@@ -5,13 +5,13 @@
 \title{Cell Plot}
 \usage{
 cell.plot(x, cells, x.col = NULL, cell.col = c("blue", "white", "red"),
-  inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0.1),
-  y.mar = c(0.08, 0.1), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
+  inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0),
+  y.mar = c(0.1, 0), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
   xlab.cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
   cell.outer = 2, cell.sort = T, cell.limit = 30, cell.bounds = NULL,
   elem.bounds = NULL, xlab = "GO Term Enrichment", key = T,
   key.lab = "Differential Expression", key.n = 11, spacers = NULL,
-  bar.scale = NULL, gridlines = T, ...)
+  bar.scale = 1, gridlines = T, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -93,30 +93,35 @@ regulation of the constituent genes.
 }
 \examples{
 \dontrun{
-## Generate random positive vector and name it
+
+### Random data example
+
+# Generate random positive vector and name it
 x = sort( runif(16, min = 1, max = 3), decreasing = T )
 names(x) = paste("GO Term",1:16)
 
-## Label colors
+# Label colors
 xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
 
-## Generate list with random vectors, one for each entry in x
+# Generate list with random vectors, one for each entry in x
 cells = list()
 xc = round( runif(16, min=21, max=100) )
 for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
 cells[[9]][1:2] = Inf
 cells[[9]][3] = -Inf
 
-## Plot with spacers
+# Plot with spacers
 cell.plot( x, cells,
            xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
            main="Cell Plot Demo", xlab="log(enrichment)" )
 
-## golub.deg data example:
-data(golub.deg)
-cell.plot( x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc,
-           elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0),
-           main = "Golub et al. DEG and GO Enrichment" )
+### golubstat data example
+
+data(golubstat)
+x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+x <- head(x, 10)
+cell.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc,
+           main = "Golub et al. (1999) - Gene Ontology Enrichment" )
 }
 }
 \author{

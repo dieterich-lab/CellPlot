@@ -6,13 +6,12 @@
 \usage{
 sym.plot(x, cells = NULL, x.annotated, x.up = NULL, x.down = NULL,
   x.col = NULL, sort = F, main = "", elem.bounds = NULL,
-  x.mar = c(0.2, 0.05), y.mar = c(0.1, 0), bar.lwd = 2,
-  bar.scale = NULL, space = 0.1, mid.gap = 0.1, mid.bounds = NULL,
-  mid.col = c("white", "darkred"), key.lab = "GO Term Enrichment",
-  key.n = 11, cols = c("deepskyblue2", "coral"),
-  group.labels = c("Downregulated", "Annotated", "Upregulated"),
-  group.cex = 0.8, axis.cex = 0.8, mid.cex = 0.8, lab.cex = 1,
-  ticksize = 10, xlim = NULL, ...)
+  x.mar = c(0.2, 0), y.mar = c(0.2, 0), bar.lwd = 2, bar.scale = NULL,
+  space = 0.1, mid.gap = 0.1, mid.bounds = NULL, mid.col = c("white",
+  "darkred"), key.lab = "GO Term Enrichment", key.n = 11,
+  cols = c("deepskyblue2", "coral"), group.labels = c("Downregulated",
+  "Annotated", "Upregulated"), group.cex = 0.8, axis.cex = 0.8,
+  mid.cex = 0.8, lab.cex = 1, ticksize = 10, xlim = NULL, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -39,7 +38,7 @@ in both categories combined. Defaults to NULL, in which case no filter is applie
 
 \item{x.mar}{Left and right margins as fractions of plot width. Defaults to c(0.2,0.05).}
 
-\item{y.mar}{Lower and upper margins as fractions of plot height. Defaults to c(0.1,0).}
+\item{y.mar}{Top and bottom margins as fractions of plot height. Defaults to c(0.1,0).}
 
 \item{bar.lwd}{Line width of bar elements. Defaults to 2.}
 
@@ -93,14 +92,17 @@ genes in the same order as x.
 }
 \examples{
 \dontrun{
-## Generate random positive vector and name it
+
+### Random data example
+
+# Generate random positive vector and name it
 x = sort( runif(16, min = 1, max = 3), decreasing = T )
 names(x) = paste("GO Term",1:16)
 
-## Label colors
+# Label colors
 xcolor = c(rep("darkslategrey",4), rep("chartreuse4",4), rep("coral4",8))
 
-## Generate list with random vectors, one for each entry in x
+# Generate list with random vectors, one for each entry in x
 cells = list()
 xc = round( runif(16, min=21, max=100) )
 for (i in 1:length(xc)) { cells = c(cells, list(runif(xc[i],-5,5))) }
@@ -108,17 +110,18 @@ cells[[9]][1:2] = Inf
 cells[[9]][3] = -Inf
 cells.annotated <- sapply(cells, length)
 
-## Plot with spacers
+# Plot with spacers
 sym.plot( x, cells, cells.annotated,
           xcolor, spacers = c(4,8), xlab.ticks = 5, cell.limit = 80,
           main="Cell Plot Demo", xlab="log(enrichment)" )
 
-## golub.deg data example:
-data(golub.deg)
-sym.plot( x = golub.deg$go$go.loge, cells = golub.deg$go$deg.logfc,
-          x.annotated = golub.deg$go$go.table$Annotated,
-          elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0),
-          main = "Golub et al. DEG and GO Enrichment" )
+### golub.deg data example
+
+data(golubstat)
+x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+x <- head(x, 10)
+sym.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, x.annotated = x$annotated,
+          main = "Golub et al. (1999) - Gene Ontology Enrichment" )
 }
 }
 \author{
