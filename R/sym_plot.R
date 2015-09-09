@@ -98,11 +98,12 @@
 #'   main="Cell Plot Demo", xlab="log(enrichment)", cell.limit = 80)
 #'   
 #' ## golub.deg data example:
-#' data(golub.deg)
+#' data(golubstat)
+#' x = subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+#' x = head(x, 10)
+#' sym.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, x.annotated = x$annotated,
+#'           main = "Golub et al. (1999) - Gene Ontology Enrichment", cex=1.2, x.mar = c(0.4,0), ticksize = 5 )
 #' 
-#' sym.plot(x = golub.deg$go$go.loge, 
-#' x.annotated = attr(golub.deg$go, "gotab")$Annotated[match( golub.deg$go$go.ids, attr(golub.deg$go, "gotab")$GO.ID)], 
-#' cells = golub.deg$go$deg.logfc, elem.bounds = c(5,100), bar.scale=1, x.mar=c(0.3,0) )
 #' }
 #'
 
