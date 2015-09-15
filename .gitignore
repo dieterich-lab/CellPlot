@@ -4,5 +4,5 @@
 *.Rproj
 dev.r
 vignettes/*
-!vignettes/*.Rnw
-!vignettes/*.pdf
+!vignettes/manuals.Rnw
+!vignettes/manuals.pdf
