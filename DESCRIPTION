@@ -1,10 +1,10 @@
-Package: cellplot
+Package: CellPlot
 Type: Package
 Title: Segmented Bar Chart Plot Methods
-Version: 1.1
-Date: 2015-08-25
+Version: 1.0
+Date: 2015-09-15
 Author: Robert Sehlke, Sven E. Templer
 Maintainer: Robert Sehlke <rsehlke@age.mpg.de>
-Description: Plot for simultaneous visualization of functional enrichment and expression values.
+Description: Plot for simultaneous visualisation of functional enrichment and expression values.
 Suggests: topGO, multtest, plyr, annotate, hu6800.db
-License: GPL-2
+License: GPL-3

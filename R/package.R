@@ -1,18 +1,23 @@
-#' @title Package cellplot
+#' @title Package CellPlot
 #' 
 #' @description 
 #' Plot methods for presentation of cellular data as bar charts.
 #' 
 #' @details
+#' Plot functions:\cr
 #' \code{\link{cell.plot}} - A function to plot segmented bars.\cr
-#' \code{\link{sym.plot}} - A function to plot split bars.\cr
-#' \code{\link{topgo2cellplot}} - A function to merge \code{topGO} objects 
-#' and differential gene expression tables to a list suitable for the 
-#' \code{cell.plot} and \code{sym.plot} functions.\cr
-#' \code{\link{golub.deg}} - A data set with differential gene expression
+#' \code{\link{sym.plot}} - A function to plot split bars.\cr\cr
+#' Analysis functions:\cr
+#' \code{\link{go.enrich}} - A function to merge \code{topGO} objects 
+#' and differential gene expression tables and perform GO enrichment
+#' analysis returning a \code{data.frame} suitable for the 
+#' \code{cell.plot} and \code{sym.plot} functions.\cr\cr
+#' Data objects:\cr
+#' \code{\link{golubstat}} - A data set with differential gene expression
 #' and gene ontology analysis derived from \link[multtest]{golub} data.\cr
 #' 
-#' @name cellplot-package
+#' @name CellPlot-package
+#' @aliases CellPlot
 #' 
 #' @author 
 #' Robert Sehlke\cr
