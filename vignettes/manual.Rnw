@@ -8,7 +8,7 @@
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
 \usepackage{graphicx}
 \title{R Package \texttt{CellPlot} \protect\\ User Manual}
-\author{Sven E. Templer\\\texttt{sven.templer@gmail.com}}
+\author{Sven E. Templer, Robert Sehlke\\\texttt{rsehlke@age.mpg.de}}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
@@ -25,23 +25,13 @@ opts_chunk$set(concordance=TRUE)
 
 \section{Introduction}
 
-\textbf{CellPlot}\\
+\subsection{Description}
 
-A \href{http://r-project.org}{GNU R} package for comparted bar plots.\\
+\textbf{CellPlot} is a \href{http://r-project.org}{GNU R} package with plot methods for the integrated visualisation of functional enrichment and expression data. It can be used to display commonly used gene ontology (GO) enrichment analysis from differential gene expression.
 
-Introduction text...\\
+\subsection{Installation \& Development}
 
-\section{Installation \& Development}
-
-You can install the package to use it in any \texttt{R} session. The stable versions are published on the comprehensive R archive network (CRAN) servers. The web description of this and previous versions can be found on the page \href{http://http://cran.r-project.org/web/packages/CellPlot/}{cran.r-project.org/web/packages/CellPlot}. The installation takes place in an \texttt{R} session or script. Run the code:
-
-<<eval=FALSE>>=
-install.packages("CellPlot")
-@
-
-A more administrative way is to use the command line in a shell environment and install the package from a downloaded \texttt{.tar.gz} archive. Invoking \texttt{R} from the shell provides the syntax \texttt{R CMD INSTALL /path/to/package.tar.gz} therefore.\\
-
-The most recent version can be found on \href{http://github.com/dieterich-lab/CellPlot}{github.com/dieterich-lab/CellPlot}. With the \texttt{devtools} package, it is easy to install it:
+You can install the package to use it in any \texttt{R} session. The stable versions will be published on the comprehensive R archive network (CRAN) servers. The most recent version can be found on \href{http://github.com/dieterich-lab/CellPlot}{github.com/dieterich-lab/CellPlot}. With the \texttt{devtools} package, it is easy to install:
 
 <<eval=FALSE>>=
 install.packages("devtools")
@@ -49,42 +39,121 @@ library(devtools)
 install_github(repo='dieterich-lab/CellPlot')
 @
 
-Once installed, you need to load the package into the current session to access the functions and help pages. With the functions \texttt{library} or \texttt{require} you perform this step:
+Once installed, you need to load the package into the current session to access the functions and help pages. With the function \texttt{library}, you perform this step:
 
 <<message=TRUE, warning=TRUE>>=
-library(cellplot)
+library(CellPlot)
 @
 
-In the following sections the usage of the functions is shown with example data and the output. Each function is accomanied by a help page, which is typically invoked on the \texttt{R} shell with \texttt{?} in front of the function's name.
+General help is available at the manual pages of the functions or package, e.g.:
 
-\section{Example Dataset}
+<<eval=FALSE>>=
+?CellPlot
+@
 
-\subsection{Data \texttt{golubstat}}
+\section{DEG and GO enrichment analysis}
 
-This data set contains microarray gene expression data from leukemia study of Golub et al. (1999). Processed as described in Dudoit et al. (2002). Adapted from package multtest. Differential gene expression was performed using a Student t-test to compare the two groups. GO annotation was done with the \texttt{annotate} and \texttt{hu6800.db} packages from Bioconductor. The \texttt{topGO} package was utilized to perform a GO enrichment test based on Fisher's exact test. Data of the DEG and GO enrichment was merged with the provided go.enrich function. The code to create the data object is shown in the examples section.
+The following code represents a simple analysis workflow to analyse/test for differentially regulated genes from two conditions, perform GO enrichment analysis and merge the data to a \texttt{data.frame}. The example data therefore is taken from the \texttt{multtest} package, available from the \href{http://www.bioconductor.org/packages/release/bioc/html/multtest.html} platform. It contains microarray gene expression data from leukemia study of Golub et al. (1999). Processed as described in Dudoit et al. (2002).\\
 
+Differential gene expression was performed using a Student t-test to compare the two groups. GO annotation was done with the \texttt{annotate} and \texttt{hu6800.db} packages from Bioconductor. The \texttt{topGO} package was utilized to perform a GO enrichment test based on Fisher's exact test. Data of the DEG and GO enrichment was merged with the provided go.enrich function. The code to create the data object is shown in the examples section. For help about the data set also read the manual page of the resulting and implemented data set (\texttt{?golubstat}):
 
+<<eval=FALSE>>=
+### Differential gene expression
+### and GO enrichment analysis
+### of the golub dataset:
+
+## install dependencies
+source("http://bioconductor.org/biocLite.R")
+biocLite("hu6800.db")
+biocLite("multtest")
+biocLite("topGO")
+
+## load dependencies
+library(CellPlot)
+library(plyr)
+library(multtest)
+library(annotate)
+library(hu6800.db)
+library(topGO)
+
+## data import
+data(golub)
+
+## differential gene expression testing
+golub.test <- function (e, i, n) {
+  i <- as.logical(i)
+  a <- split(e[,i],seq(nrow(e)))
+  b <- split(e[,!i],seq(nrow(e)))
+  fun.map <- function (a, b) {
+    t <- t.test(a, b)
+    t$fc <- t$estimate[1]/t$estimate[2]
+    suppressWarnings(t$fc <- log2(t$fc))
+    data.frame(
+      mean.aml = t$estimate[1],
+      mean.all = t$estimate[2],
+      log2fc  = t$fc,
+      p = t$p.value,
+      row.names = NULL)
+  }
+  s <- Map(fun.map, a, b)
+  s <- do.call(rbind, s)
+  s$p.adj <- p.adjust(s$p)
+  s <- data.frame(n, s, stringsAsFactors = FALSE)
+  s <- subset(s, !is.na(log2fc))
+  return(s)
+}
+
+degdata <- golub.test(golub, golub.cl, data.frame(
+  gene = golub.gnames[,3], index = as.integer(golub.gnames[,1]),
+  stringsAsFactors = FALSE))
+
+## gene ontology annotation
+goterms <- select(
+  hu6800.db, degdata$gene,
+  c("PROBEID","ALIAS","GO","ENSEMBL","ENTREZID"))
+goterms <- dlply(
+  subset(goterms, ONTOLOGY == "BP"), "PROBEID",
+  function (x) unique(x$GO))
+
+## topGO object
+godata <- new(
+  "topGOdata", ontology = "BP", description = 'golub',
+  allGenes = setNames(degdata$p.adj, degdata$gene),
+  geneSelectionFun = function (allScore) { allScore <= 0.05 },
+  annotationFun = annFUN.gene2GO, gene2GO = goterms)
+
+## gene ontology enrichment
+#golubstat <- go.enrich(godata, degdata, p.max = 1)
+golubstat <- go.enrich(godata, degdata)
+@
+
+A table like \texttt{degdata} from this example might also be obtained from DEG analysis with common tools as used in the Tuxedo pipeline (tophat/cuffdiff) and imported with \texttt{read.delim}. The resulting data object is available with our package. You can load it with the command:
 
 <<>>=
 data("golubstat")
 @
 
-See the help page of the data set on how it was created from the \texttt{golub} dataset using differential gene expression, GO annotation and GO enrichment.
+The columns are described in the help page, and the data structure can be investigated with the \texttt{str} and \texttt{head} functions, e.g.:
 
 <<>>=
-head(golubstat)
+?golubstat
+str(head(subset(golubstat, !duplicated(genes))))
 @
 
-\section{Plots}
+\section{Visualization of GO enrichment}
+
+For the examples, we use a subset of the GO enrichment analysis of the \texttt{golubstat} data. Create the subset with:
+
+<<>>=
+x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+x <- head(x, 10)
+@
 
 \subsection{\texttt{cell.plot}}
 
-Plots a horizontal barchart of strictly positive values in x. For each entry, a vector of additional values needs to be provided in a list. The additional values are plotted as cells subdividing the length of the corresponding bar. A typical usage scenario is plotting the enrichment of Gene Ontology terms, with individual cells reflecting the differential regulation of the constituent genes.
+This function plots a horizontal barchart of strictly positive values in x. For each entry, a vector of additional values needs to be provided in a list. The additional values are plotted as cells subdividing the length of the corresponding bar. A typical usage scenario is plotting the enrichment of Gene Ontology terms, with individual cells reflecting the differential regulation of the constituent genes.
 
-
-<<label=fig_cellplot, eval=TRUE, width=10, height=5, fig=TRUE>>=
-x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
-x <- head(x, 10)
+<<label=fig_cellplot, eval=TRUE, width=10, height=6, fig=TRUE>>=
 cell.plot( x = setNames(x$loge, x$term), cells =x$deg.log2fc, x.bound = 2, 
            cell.bounds = c(-6,6), space = 0.15, main ="", y.mar =c(0.1,0), 
            x.mar =c(.47, 0), key.n=7, cex=1.6, grid.lwd=3, axis.cex=0.8, cell.outer=3 )
@@ -92,13 +161,17 @@ cell.plot( x = setNames(x$loge, x$term), cells =x$deg.log2fc, x.bound = 2,
 
 \subsection{\texttt{sym.plot}}
 
-Plots a split barchart, showing the proportions of two mutually exclusive sets in relation to a set containing them both. E.g., Gene Ontology terms, showing the proportions of differentially down-regulated and up-regulated annotated genes from a perturbation experiment. The color of the central column elements maps to the value provided in x (e.g. GO term enrichment). Associated genes may be provided as a list of vectors of expression values, same as for cell.plot(), or as separate vectors x.up and x.down, providing the numbers of up- and down-regulated genes in the same order as x.
+This function plots a split barchart, showing the proportions of two mutually exclusive sets in relation to a set containing them both. E.g., Gene Ontology terms, showing the proportions of differentially down-regulated and up-regulated annotated genes from a perturbation experiment. The color of the central column elements maps to the value provided in x (e.g. GO term enrichment). Associated genes may be provided as a list of vectors of expression values, same as for cell.plot(), or as separate vectors x.up and x.down, providing the numbers of up- and down-regulated genes in the same order as x.
 
-<<label=fig_symplot, eval=TRUE, width=10, height=5, fig=TRUE>>=
+<<label=fig_symplot, eval=TRUE, width=10, height=6, fig=TRUE>>=
 sym.plot( ticksize = 5, x = setNames(x$loge, x$term), cells = x$deg.log2fc, 
           x.annotated = x$annotated, y.mar = c(0.1,0), x.mar = c(.47, 0), key.n=7, 
           key.lab = "GO Term enrichment", cex = 1.6, axis.cex=0.8, group.cex=0.7, 
           grid.lwd=3 )
 @
+
+\subsection{Parameter description}
+
+x.mar, bar.scale(?)
 
 \end{document}
