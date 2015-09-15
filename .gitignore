@@ -3,3 +3,6 @@
 .RData
 *.Rproj
 dev.r
+vignettes/*
+!vignettes/*.Rnw
+!vignettes/*.pdf

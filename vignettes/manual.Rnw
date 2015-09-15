@@ -1,0 +1,90 @@
+%\VignetteIndexEntry{User Manual}
+%\VignettePackage{cellplot}
+%\VignetteKeywords{manual}
+%\VignetteEngine{knitr::knitr}
+
+\documentclass[a4paper]{article}
+\usepackage[top=100pt,bottom=60pt,left=75pt,right=60pt]{geometry}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
+\title{R Package \texttt{CellPlot} \protect\\ User Manual}
+\author{Sven E. Templer\\\texttt{sven.templer@gmail.com}}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+%\SweaveOpts{concordance=TRUE}
+
+<<include=FALSE, echo=FALSE>>=
+require(knitr)
+opts_chunk$set(concordance=TRUE)
+@
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\textbf{CellPlot}\\
+
+A \href{http://r-project.org}{GNU R} package for comparted bar plots.\\
+
+Introduction text...\\
+
+\section{Installation \& Development}
+
+You can install the package to use it in any \texttt{R} session. The stable versions are published on the comprehensive R archive network (CRAN) servers. The web description of this and previous versions can be found on the page \href{http://http://cran.r-project.org/web/packages/CellPlot/}{cran.r-project.org/web/packages/CellPlot}. The installation takes place in an \texttt{R} session or script. Run the code:
+
+<<eval=FALSE>>=
+install.packages("CellPlot")
+@
+
+A more administrative way is to use the command line in a shell environment and install the package from a downloaded \texttt{.tar.gz} archive. Invoking \texttt{R} from the shell provides the syntax \texttt{R CMD INSTALL /path/to/package.tar.gz} therefore.\\
+
+The most recent version can be found on \href{http://github.com/dieterich-lab/CellPlot}{github.com/dieterich-lab/CellPlot}. With the \texttt{devtools} package, it is easy to install it:
+
+<<eval=FALSE>>=
+install.packages("devtools")
+library(devtools)
+install_github(repo='dieterich-lab/CellPlot')
+@
+
+Once installed, you need to load the package into the current session to access the functions and help pages. With the functions \texttt{library} or \texttt{require} you perform this step:
+
+<<message=TRUE, warning=TRUE>>=
+library(cellplot)
+@
+
+In the following sections the usage of the functions is shown with example data and the output. Each function is accomanied by a help page, which is typically invoked on the \texttt{R} shell with \texttt{?} in front of the function's name.
+
+\section{Example Dataset}
+
+\subsection{Data \texttt{golubstat}}
+
+This data set contains microarray gene expression data from leukemia study of Golub et al. (1999). Processed as described in Dudoit et al. (2002). Adapted from package multtest. Differential gene expression was performed using a Student t-test to compare the two groups. GO annotation was done with the \textttt{annotate} and \texttt{hu6800.db} packages from Bioconductor. The \texttt{topGO} package was utilized to perform a GO enrichment test based on Fisher's exact test. Data of the DEG and GO enrichment was merged with the provided go.enrich function. The code to create the data object is shown in the examples section.
+
+
+
+<<>>=
+data("golubstat")
+@
+
+See the help page of the data set on how it was created from the \texttt{golub} dataset using differential gene expression, GO annotation and GO enrichment.
+
+\section{Plots}
+
+\subsection{\texttt{cell.plot}}
+
+Plots a horizontal barchart of strictly positive values in x. For each entry, a vector of additional values needs to be provided in a list. The additional values are plotted as cells subdividing the length of the corresponding bar. A typical usage scenario is plotting the enrichment of Gene Ontology terms, with individual cells reflecting the differential regulation of the constituent genes.
+
+<<>>=
+x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
+x <- head(x, 10)
+cell.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc,
+           main = "Golub et al. (1999) - Gene Ontology Enrichment" )
+@
+
+\subsection{\texttt{sym.plot}}
+
+Plots a split barchart, showing the proportions of two mutually exclusive sets in relation to a set containing them both. E.g., Gene Ontology terms, showing the proportions of differentially down-regulated and up-regulated annotated genes from a perturbation experiment. The color of the central column elements maps to the value provided in x (e.g. GO term enrichment). Associated genes may be provided as a list of vectors of expression values, same as for cell.plot(), or as separate vectors x.up and x.down, providing the numbers of up- and down-regulated genes in the same order as x.
+
+\end{document}
