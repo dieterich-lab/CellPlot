@@ -72,7 +72,8 @@
 #' 
 #' @param ticksize Spacing between x-axis ticks. Defaults to 10.
 #'
-#' @param xlim A vector with both X axis limits between 0 and 100.
+#' @param x.bound x.bound Numeric, must be positive and <= 100. Specifies upper bound of x-axis scale (in percent). If NULL (the default),
+#' this value is chosen automatically.
 #' 
 #' @param ... Other arguments, ignored.
 #' 
@@ -121,7 +122,7 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
                      x.mar=c(0.2, 0), y.mar = c(0.2, 0), bar.lwd=2, bar.scale=NULL, space = 0.1, mid.gap=0.1,
                      mid.bounds=NULL, mid.col=c("white","darkred"), key.lab="GO Term Enrichment", key.n = 11, cols = c("deepskyblue2","coral"), 
                      group.labels=c("Downregulated","Annotated","Upregulated"), group.cex=0.8, axis.cex=0.8, mid.cex=0.8, 
-                     lab.cex=1, ticksize=10, xlim=NULL, ...) {
+                     lab.cex=1, ticksize=10, x.bound=NULL, ...) {
   shading.density=20
   
   # parameter checks
@@ -197,15 +198,15 @@ sym.plot = function( x, cells=NULL, x.annotated, x.up=NULL, x.down=NULL, x.col=N
     while ( xl/ticksize < 1 ) {
       ticksize=ticksize/10
     }
-    xlim=min( xl+ticksize%%xl, 100)
+    x.bound=min( xl+ticksize%%xl, 100)
   }
   
   par(xpd=NA)
-  if(is.null(xlim)) { 
+  if(is.null(x.bound)) { 
     bound = max( apply( symframe,1,function(x) max( sum(x[1:2]), sum(x[4:5])) ) )
     bound = bound + bound %% ticksize 
   } else {
-    bound = xlim
+    bound = x.bound
   }
   boundmid = max(symframe[,3])
   midmean = boundmid/3
