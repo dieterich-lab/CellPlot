@@ -39,7 +39,7 @@ library(devtools)
 install_github(repo='dieterich-lab/CellPlot')
 @
 
-Once installed, you need to load the package into the current session to access the functions and help pages. With the function \texttt{library}, you perform this step:
+Once installed, you need to load the package into the current session to access the functions and help pages:
 
 <<message=TRUE, warning=TRUE>>=
 library(CellPlot)
@@ -53,7 +53,7 @@ General help is available at the manual pages of the functions or package, e.g.:
 
 \section{DEG and GO enrichment analysis}
 
-The following code represents a simple analysis workflow to analyse/test for differentially regulated genes from two conditions, perform GO enrichment analysis and merge the data to a \texttt{data.frame}. The example data therefore is taken from the \texttt{multtest} package, available from the \href{http://www.bioconductor.org/packages/release/bioc/html/multtest.html} platform. It contains microarray gene expression data from leukemia study of Golub et al. (1999). Processed as described in Dudoit et al. (2002).\\
+The following code represents a simple analysis workflow to analyse/test for differentially regulated genes from two conditions, perform GO enrichment analysis and merge the data to a \texttt{data.frame}. The example data therefore is taken from the \texttt{multtest} package, available from the \href{http://www.bioconductor.org/packages/release/bioc/html/multtest.html} platform. It contains microarray gene expression data from leukemia study of Golub et al. (1999), processed as described in Dudoit et al. (2002).\\
 
 Differential gene expression was performed using a Student t-test to compare the two groups. GO annotation was done with the \texttt{annotate} and \texttt{hu6800.db} packages from Bioconductor. The \texttt{topGO} package was utilized to perform a GO enrichment test based on Fisher's exact test. Data of the DEG and GO enrichment was merged with the provided go.enrich function. The code to create the data object is shown in the examples section. For help about the data set also read the manual page of the resulting and implemented data set (\texttt{?golubstat}):
 
@@ -170,8 +170,29 @@ sym.plot( ticksize = 5, x = setNames(x$loge, x$term), cells = x$deg.log2fc,
           grid.lwd=3 )
 @
 
-\subsection{Parameter description}
+\subsection{Visual parameters}
 
-x.mar, bar.scale(?)
+Both functions provide a range of parameters to tweak the visual appearance of the plots. 
+\begin{itemize}
+\item \textbf{Font sizes} of the various elements can be adjusted using the \texttt{cex} parameters.
+\item \textbf{Internal margins} are adjusted through \texttt{x.mar} and \texttt{y.mar}. Used in particular to accomodate the label text to the left-hand side.
+\item \textbf{Absolute scaling} can be achieved through the \texttt{bar.scale} parameter, which acts as a multiplier for a predetermined average bar height. This is meant to be used in conjunction with a graphics device of constant size, to ensure visual consistency among multiple plots that vary in the number of terms displayed.
+\item \textbf{Data ranges} for all output may be fixed:
+  \begin{itemize}
+  \item \texttt{elem.bounds} Require the cardinality of a term or significant subset to be in a specific range, e.g. \texttt{c(10,100)} -- between 10 and 100 genes.
+  \item \texttt{x.bound} Upper limit of the value displayed on the x-axis. For \texttt{sym.plot} this is must be a value between 0 and 100. The lower limit is always 0.
+  \item \texttt{cell.bounds} (only \texttt{cell.plot}) Sets the colour scale for cell data to a fixed range. If the plot contains values outside of that range, an indicator is added to the colour legend. This is particularly useful in the event of a few extreme outliers.
+  \item \texttt{mid.bounds} (only \texttt{sym.plot}) Similar to \texttt{cell.bounds}, this sets the colour range of the central column cells.
+  \item \texttt{sym} (only \texttt{cell.plot}), when set to \texttt{TRUE}, makes the scale of cell values symmetrical.
+\end{itemize}
+\item \textbf{Colour schemes} may be controlled through character vectors provided to the following parameters. Internally, the R native function \texttt{ColorRampPalette()} is used.
+\begin{itemize}
+  \item \texttt{cell.col} (only \texttt{cell.plot}) Specify three valid colour names for cell data visualisation (lower extreme, mid point, upper extreme).
+  \item \texttt{mid.col} (only \texttt{sym.plot}) Specify two valid colour names to define the range of the central column cell colours. 
+\end{itemize}
+\item \textbf{Colour keys} can be adjusted in their resolution (number of boxes) using the \texttt{key.n} parameter.
+\item \textbf{Gridlines} may be hidden via the \texttt{gridlines} parameter.
+
+\end{itemize}
 
 \end{document}
