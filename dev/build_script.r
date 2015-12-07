@@ -5,6 +5,8 @@
 ### package
 
 library(devtools)
+library(rmarkdown)
+render('vignettes/CellPlotManual.Rmd')
 document()
 install(build_vignettes = TRUE)
 library(CellPlot)
