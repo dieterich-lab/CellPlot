@@ -6,5 +6,9 @@ Date: 2015-09-15
 Author: Robert Sehlke, Sven E. Templer
 Maintainer: Robert Sehlke <rsehlke@age.mpg.de>
 Description: Plot for simultaneous visualisation of functional enrichment and expression values.
-Suggests: topGO, multtest, plyr, annotate, hu6800.db
+Suggests: topGO, multtest, plyr, annotate, hu6800.db,
+    knitr
 License: GPL-3
+VignetteBuilder: knitr
+URL: https://github.com/dieterich-lab/CellPlot
+BugReports: https://github.com/dieterich-lab/CellPlot/issues

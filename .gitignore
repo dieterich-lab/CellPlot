@@ -3,6 +3,4 @@
 .RData
 *.Rproj
 dev.r
-vignettes/*
-!vignettes/manuals.Rnw
-!vignettes/manuals.pdf
+inst/doc
