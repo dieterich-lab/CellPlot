@@ -4,8 +4,8 @@
 \alias{cell.plot}
 \title{Cell Plot}
 \usage{
-cell.plot(x, cells, x.col = NULL, cell.col = c("blue", "white", "red"),
-  inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0),
+cell.plot(x, cells, x.col = NULL, cell.col = c("deepskyblue2", "white",
+  "coral"), inf.shading = 30/cell.lwd, space = 0.1, x.mar = c(0.2, 0),
   y.mar = c(0.1, 0), x.bound = NULL, lab.cex = 1, xdes.cex = 1,
   xlab.cex = 1, xlab.ticks = 5, sym = FALSE, cell.lwd = 2,
   cell.outer = 2, cell.sort = T, cell.limit = 30, cell.bounds = NULL,

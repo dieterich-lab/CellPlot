@@ -11,7 +11,9 @@ Plot methods for presentation of cellular data as bar charts.
 \details{
 Plot functions:\cr
 \code{\link{cell.plot}} - A function to plot segmented bars.\cr
-\code{\link{sym.plot}} - A function to plot split bars.\cr\cr
+\code{\link{sym.plot}} - A function to plot split bars.\cr
+\code{\link{arc.plot}} - A function to plot category enrichments
+showing proportions of member directionalities and .\cr\cr
 Analysis functions:\cr
 \code{\link{go.enrich}} - A function to merge \code{topGO} objects
 and differential gene expression tables and perform GO enrichment

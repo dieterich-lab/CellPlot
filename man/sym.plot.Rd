@@ -11,7 +11,7 @@ sym.plot(x, cells = NULL, x.annotated, x.up = NULL, x.down = NULL,
   "darkred"), key.lab = "GO Term Enrichment", key.n = 11,
   cols = c("deepskyblue2", "coral"), group.labels = c("Downregulated",
   "Annotated", "Upregulated"), group.cex = 0.8, axis.cex = 0.8,
-  mid.cex = 0.8, lab.cex = 1, ticksize = 10, xlim = NULL, ...)
+  mid.cex = 0.8, lab.cex = 1, ticksize = 10, x.bound = NULL, ...)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -75,7 +75,8 @@ c("Downregulated","Annotated","Upregulated").}
 
 \item{ticksize}{Spacing between x-axis ticks. Defaults to 10.}
 
-\item{xlim}{A vector with both X axis limits between 0 and 100.}
+\item{x.bound}{x.bound Numeric, must be positive and <= 100. Specifies upper bound of x-axis scale (in percent). If NULL (the default),
+this value is chosen automatically.}
 
 \item{...}{Other arguments, ignored.}
 }
