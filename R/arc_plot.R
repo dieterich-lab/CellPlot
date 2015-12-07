@@ -13,8 +13,21 @@
 #' 
 #'
 #' @param x Strictly positive numeric vector.
-#'
-#' @param ... all the other parameters you always wanted to know about, but were afraid to ask.
+#' @param up.list List with named vectors, according to x, but only with positive 
+#' (i.e. fold changes of gene expression) values.
+#' @param down.list As up.list, but with negatives.
+#' @param y.mar Plot area horizontal margins.
+#' @param x.mar Plot area vertical margins.
+#' @param x.bound tba
+#' @param x.ticks tba
+#' @param x.scale tba
+#' @param space tba
+#' @param fixed.scale tba
+#' @param t Threshold for Jaccard distance to display.
+#' @param tc Color of fold change bars.
+#' @param main Plot title.
+#' @param barcol Color of ratio bars.
+#' @param ... tba
 #' 
 #' @author 
 #' Robert Sehlke [aut]\cr
@@ -43,7 +56,8 @@
 #' 
 
 #' @export
-arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.bound=NULL, x.ticks=3, x.scale=1, space=0.1, fixed.scale=NULL, t=0.2, tc="black", main="GO Term Analysis",
+arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.bound=NULL, x.ticks=3, x.scale=1, 
+                     space=0.1, fixed.scale=NULL, t=0.2, tc="black", main="GO Term Analysis",
                      barcol = c("deepskyblue2","coral") ) {
   # code for preciseArc subroutine adapted from plotrix draw.circle function (https://cran.r-project.org/web/packages/plotrix/index.html)
   preciseArc = function (x, y, radius, nv = 100, border = NULL, col = "red", lty = 1, 
