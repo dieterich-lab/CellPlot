@@ -21,17 +21,20 @@
 #' @param x.bound tba
 #' @param x.ticks tba
 #' @param x.scale tba
+#' @param x.gap gap between bar sections
+#' @param x.arc.gap gap between rectangles and arcs
 #' @param space tba
 #' @param fixed.scale tba
 #' @param t Threshold for Jaccard distance to display.
-#' @param tc Color of fold change bars.
+#' @param tc NA
 #' @param main Plot title.
 #' @param barcol Color of ratio bars.
 #' @param ... tba
 #' 
 #' @author 
 #' Robert Sehlke [aut]\cr
-#' Sven E. Templer [ctb]
+#' Sven E. Templer [ctb]\cr
+#' Authors of plotrix package for the plot functionality of arcs [ctb]
 #'
 #' @examples
 #' \dontrun{
@@ -56,7 +59,7 @@
 #' 
 
 #' @export
-arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.bound=NULL, x.ticks=3, x.scale=1, 
+arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.bound=NULL, x.ticks=3, x.scale=1, x.gap = .05, x.arc.gap = .3,
                      space=0.1, fixed.scale=NULL, t=0.2, tc="black", main="GO Term Analysis",
                      barcol = c("deepskyblue2","coral") ) {
   # code for preciseArc subroutine adapted from plotrix draw.circle function (https://cran.r-project.org/web/packages/plotrix/index.html)
@@ -172,17 +175,17 @@ arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.boun
       p2 = mean(ysteps[k:(k+1)])
       hinge = mean( c(p1,p2) )
       rad = abs(p1-p2)/2
-      preciseArc(x.mar[1]+ygap*gapex*xscale*0.1,hinge,rad,width = overlapmatrix[j,k], col = arcolmat[j,k], startdegree = -90, stopdegree = 90, nv = 100)
+      preciseArc(x.mar[1]+x.arc.gap*ygap*gapex*xscale*0.1,hinge,rad,width = overlapmatrix[j,k], col = arcolmat[j,k], startdegree = -90, stopdegree = 90, nv = 100)
     }
   }
   
   
   # enrichment axis ticks
   at.enrich = seq( x.mar[1]-ygap*gapex*xscale*2,
-                   x.mar[1]-ygap*gapex*xscale*1.1,
+                   x.mar[1]-ygap*gapex*xscale*(1+x.gap),
                    length.out = ticks)
   lab.enrich = round( seq( eb, 0, length.out = ticks), digits = 1 )
-  egap = diff(at.enrich[c(1,length(at.enrich))])*xscale*0.9
+  egap = diff(at.enrich[c(1,length(at.enrich))])
   
   # up / down bars
   rect( x.mar[1]-ygap*gapex*xscale , 
