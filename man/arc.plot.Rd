@@ -5,9 +5,10 @@
 \title{Arc Plot}
 \usage{
 arc.plot(x, up.list, down.list, y.mar = c(0, 0), x.mar = c(0.5, 0),
-  x.bound = NULL, x.ticks = 3, x.scale = 1, space = 0.1,
-  fixed.scale = NULL, t = 0.2, tc = "black", main = "GO Term Analysis",
-  barcol = c("deepskyblue2", "coral"))
+  x.bound = NULL, x.ticks = 3, x.scale = 1, x.gap = 0.05,
+  x.arc.gap = 0.3, space = 0.1, fixed.scale = NULL, t = 0.2,
+  tc = "black", main = "GO Term Analysis", barcol = c("deepskyblue2",
+  "coral"))
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -27,13 +28,17 @@ arc.plot(x, up.list, down.list, y.mar = c(0, 0), x.mar = c(0.5, 0),
 
 \item{x.scale}{tba}
 
+\item{x.gap}{gap between bar sections}
+
+\item{x.arc.gap}{gap between rectangles and arcs}
+
 \item{space}{tba}
 
 \item{fixed.scale}{tba}
 
 \item{t}{Threshold for Jaccard distance to display.}
 
-\item{tc}{Color of fold change bars.}
+\item{tc}{NA}
 
 \item{main}{Plot title.}
 
@@ -75,6 +80,7 @@ arc.plot( x = setNames(x$loge, x$term), up.list = uplist, down.list = downlist)
 }
 \author{
 Robert Sehlke [aut]\cr
-Sven E. Templer [ctb]
+Sven E. Templer [ctb]\cr
+Authors of plotrix package for the plot functionality of arcs [ctb]
 }
 
