@@ -31,7 +31,26 @@
 #' numeric factor provided. Use to ensure consistency across plots with varying numbers of elements.
 #' Returns a warning if the plotting area is too small and uses the relative scale instead.
 #' 
+#' @param reorder If TRUE, terms significantly enriched in the same groups appear together.
+#' Defaults to TRUE.
 #' 
+#' @param main Plot title.
+#' 
+#' @param show.go.id If TRUE, shows the GO ID number along with the term.
+#' 
+#' @param show.ttest If TRUE, displays p-values from one-sided t-tests beside the bars, coded as
+#' asterisks. The p-values need to be included in the input data frames as columns "p.up.adj" 
+#' and "p.down.adj" (NOTE: make more generic!). Defaults to FALSE.
+#' 
+#' @param lab.cex Scalar, Character expansion factor for labels.
+#' 
+#' @param axis.cex Scalar, Character expansion factor for axis tick labels.
+#' 
+#' @param group.cex Scalar, Character expansion factor for group labels.
+#' 
+#' @param go.selection Character vector of GO IDs that should be displayed.
+#' 
+#' @param term.selection Character vector of GO term identifiers that should be displayed.
 #'
 #' @author 
 #' Robert Sehlke [aut]\cr
@@ -45,8 +64,8 @@
 
 #' @export
 go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
-                         reorder=T, golabels="idterm", main="GO enrichment", show.go.id=FALSE, prefix="",show.ttest=F, lab.cex=1, 
-                         axis.cex=1, go.selection=NULL, term.selection=NULL, scale.sep=1) {
+                         reorder=T, main="GO enrichment", show.go.id=FALSE, prefix="",show.ttest=F, lab.cex=1, 
+                         axis.cex=1, group.cex=NULL, go.selection=NULL, term.selection=NULL) {
   
   # Auxiliary functions -- put elsewhere?
     addsig = function( f, sigcolumn, at ) {
@@ -137,12 +156,17 @@ go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
     m[c(1,3)] = sapply( m[c(1,3)]/dv[2], function(x) max(x, 0.01) )
     m[c(2,4)] = sapply( m[c(2,4)]/dv[1], function(x) max(x, 0.01) )
     nc = length(framelist) * 2      # n.o. columns, just a shortcut variable
-    th = 0.6 / dv[2]                # desired label area height in inches (then scaled)
-    bh = (1 * ifelse(is.null(bar.scale),1,bar.scale))  / dv[2]       # height of one bar if fixed in inches
+    thi = 0.6; th = thi / dv[2]                # desired label area height in inches (then scaled)
+    bhi = 0.18; bh = (bhi * ifelse(is.null(bar.scale),1,bar.scale))  / dv[2]       # height of one bar if fixed in inches
     ta = 2 / dv[1]    # label area in inches (then scaled)
     bot = 0           # bottom margin of bar plots
     top = 0.4         # top margin of bar plots (need to accomodate the axes)
     gap = 0.15         # space to the left/right of bars
+  
+    if(!is.null(bar.scale)) { 
+      neededspace = bhi * nrow(intframe) + sum( m.old[c(1,3)] ) + thi
+      if ( neededspace > dv[2] ) { stop(paste0("figure region too small (set device height to above ",round(neededspace,digits = 2)," in)")) }
+    }
   
     layoutmatrix = rbind( c( nc/2+nc+5, rep( nc/2+nc+5, nc+1) ),                # m[3]           
                           c( nc/2+nc+4, sort( rep( 1:(nc/2), 2) ), nc/2+1 ),    # th
@@ -152,8 +176,6 @@ go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
     barareaheight = ifelse( is.null(bar.scale), 
                             1-m[3]-m[1]-th, 
                             min( (top+bot)/dv[2]+bh*nrow(intframe), 1-m[3]-m[1]-th ) )
-  print(top+bot+bh*nrow(intframe))
-  print(barareaheight)
     barplotwidth = (1-m[2]-m[4]-ta)/nc
   
     if ( any( c(barareaheight, barplotwidth-gap/dv[1])  <= 0 ) ) { par(mai=m.old, xpd = F); layout(1); stop("figure region too small") }
@@ -166,11 +188,11 @@ go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
   print(c( m[3],th,barareaheight,1-m[3]-th-barareaheight))
   print(c( m[2], rep( barplotwidth, nc ), m[4]+ta ))
   
-  # Column labels and title
+  # Group labels and title
     par(mai=c(0,0,0,0), xpd = T)
     for (i in 1:length(framelist) ) {
       plot.new()
-      text(0.5,0.5,names(framelist)[i], cex = 1.5)
+      text(0.5,0.5,names(framelist)[i], cex = ifelse(is.null(group.cex), 1.5, group.cex) )
     }
     plot.new()
     text(0.5,0.5,main, cex=1)
