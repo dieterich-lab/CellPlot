@@ -63,7 +63,7 @@
 #'
 
 #' @export
-go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
+go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
                          reorder=T, main="GO enrichment", show.go.id=FALSE, prefix="",show.ttest=F, lab.cex=1, 
                          axis.cex=1, group.cex=NULL, go.selection=NULL, term.selection=NULL) {
   
@@ -239,7 +239,7 @@ go_histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
   # Row labels
     par(mai=c(bot,0,top,0))
     barplot( rep(NA,length(vline)), axes = F, horiz=T, xlim = c(0.1,1) ) # dummy plot to get the scale -- any better way?
-    text(0.1,vline, , pos = 4, cex=lab.cex,
+    text(0.1, vline, pos = 4, cex=lab.cex,
          labels = if (show.go.id) { rownames(intframe) } else { gsub("GO:[0-9]+ ","",rownames(intframe)) })
 
   # bottom margin and left margin placeholder plots
