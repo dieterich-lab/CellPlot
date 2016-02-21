@@ -9,14 +9,11 @@
 #' \code{\link{sym.plot}} - A function to plot split bars.\cr
 #' \code{\link{arc.plot}} - A function to plot category enrichments 
 #' showing proportions of member directionalities and .\cr\cr
-#' Analysis functions:\cr
-#' \code{\link{go.enrich}} - A function to merge \code{topGO} objects 
-#' and differential gene expression tables and perform GO enrichment
-#' analysis returning a \code{data.frame} suitable for the 
-#' \code{cell.plot} and \code{sym.plot} functions.\cr\cr
 #' Data objects:\cr
-#' \code{\link{golubstat}} - A data set with differential gene expression
+#' \code{\link{golubGO}} - A data set with differential gene expression
 #' and gene ontology analysis derived from \link[multtest]{golub} data.\cr
+#' \code{\link{leukemiasGO}} - A data set with differential gene expression
+#' and gene ontology analysis derived from \link[leukemiasEset]{leukemiasEset} data.\cr
 #' 
 #' @name CellPlot-package
 #' @aliases CellPlot
