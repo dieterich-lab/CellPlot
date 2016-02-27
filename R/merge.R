@@ -62,15 +62,14 @@ mergeGOdeg <- function (
   x <- merge(map[,c(map.go, map.gene)], deg[,c(deg.gene, deg.p, deg.lfc)],
              by.x = map.gene, by.y = deg.gene) # all = TRUE?
   x <- merge(go, x, by.x = go.go, by.y = map.go, all.x = TRUE, all.y = FALSE)
-  gi <- match(go.go, colnames(x))
-  x <- aggregate(x[,-gi], by=list(x[[gi]]), function (i) if (length(unique(i))>1) i else unique(i))
-  colnames(x)[1] <- go.go
+  gi <- match(names(go), colnames(x))
+  x <- aggregate(x[-gi], by = x[gi], identity)
   if (length(x$pvalCutOff)) x$pvalCutOff <- as.numeric(x$pvalCutOff)
-  if (!is.null(deg.lfc)) {
-    xfc <- Map(setNames, x[[deg.lfc]], x[[map.gene]])
-    x$Upregulated <- lapply(xfc, function (i) { i[i>0] })
-    x$Downregulated <- lapply(xfc, function (i) { i[i<0] })
-  }
+#   if (!is.null(deg.lfc)) {
+#     xfc <- Map(setNames, x[[deg.lfc]], x[[map.gene]])
+#     x$Upregulated <- lapply(xfc, function (i) { i[i>0] })
+#     x$Downregulated <- lapply(xfc, function (i) { i[i<0] })
+#   }
   return(x)
 }
 
