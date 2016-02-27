@@ -28,11 +28,6 @@ foo <- function () { NULL }
 ### dataset golubGO
 ########################
 
-### Differential gene expression
-### and GO enrichment analysis
-### of the golub dataset:
-
-## install dependencies
 #source("http://bioconductor.org/biocLite.R")
 #biocLite("hu6800.db")
 #biocLite("multtest")
@@ -73,10 +68,9 @@ GO <- new("topGOdata", ontology = "BP", description = 'golub',
           annotationFun = annFUN.gene2GO, gene2GO = genes)
 
 GO <- lapply(list(golub=GO), function (x) {
-  n <- length(x@graph@nodes)
   t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
   s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = 20)
+  r <- GenTable(x, pvalCutOff = s, topNodes = 20) #length(x@graph@nodes)
   r$LogEnrich <- r$Significant / r$Expected
   return(r)
 })
@@ -90,11 +84,6 @@ save(golubGO, file = "data/golubGO.rdata")
 ### dataset leukemiasGO
 ########################
 
-### Differential gene expression
-### and GO enrichment analysis
-### of the golub dataset:
-
-## install dependencies
 #source("http://bioconductor.org/biocLite.R")
 #biocLite("hu6800.db")
 #biocLite("leukemiasEset")
@@ -108,6 +97,7 @@ library(plyr)
 library(topGO)
 library(BiocParallel)
 library(parallel)
+library(miscset)
 data(leukemiasEset)
 
 M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
@@ -143,60 +133,83 @@ GO <- lapply(DEG, function (x) new(
   "topGOdata", ontology = "BP", description = 'Leukemia', allGenes = setNames(x$pvalue, x$gene), 
   geneSelectionFun = function (allScore) { allScore <= 0.05 }, annotationFun = annFUN.gene2GO, gene2GO = genes))
 
-GO <- mclapply(GO, function (x) {
-  #n <- length(x@graph@nodes)
+GOsig <- mclapply(GO, function (x) {
   t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
   s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = 20)
+  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
   r$LogEnrich <- r$Significant / r$Expected
   return(r)
 }, mc.cores = length(GO))
 
-leukemiasGO <- Map(mergeGOdeg, GO, DEG, list(M), map.gene = "ENSEMBL")
+leukemiasGO <- Map(mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
 leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
+leukemiasGO <- lapply(leukemiasGO, sort, TRUE, by = "LogEnrich")
 
 save(leukemiasGO, file = "data/leukemiasGO.rdata")
 
 ########################
-### paper image
+### paper figure 1
 ########################
 
 library(CellPlot)
+data(golubGO)
 data(leukemiasGO)
 
-x <- golubGO$golub
-x <- leukemiasGO$CLL
 
-pdf("/beegfs/group_cd/data/projects/departments/Christoph_Dieterich/Paper_CellPlot/cpex_4_with_arc.pdf", 7, 10)
-
+#svg("~/tmp/fig1.svg", height = 10)
+pdf("~/tmp/fig1.pdf", height = 10)
+x <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
 layout(matrix(1:3,nrow=3))
 par(mar=c(3,0,4,0))
-
 par(usr=c(0,1,0,1))
-cell.plot( x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, 
-           x.mar = c(0.3,0))
+cell.plot( x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange,  x.mar = c(0.3,0), y.mar = c(0.1,0.3),
+           main = "GO enrichment in NoL vs CLL differential gene expression")
 text(0, 1.1, "A", cex=2)
-
 par(usr=c(0,1,0,1))
 sym.plot( x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
-          x.mar = c(0.3,0))
-# sym.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, x.annotated = x$annotated,
-#           y.mar = c(0.3, 0), x.mar = c(0.284, 0), 
-#           key.lab = "Enrichment", ticksize = 5, 
-#           key.n = 7, cex = 1.6, axis.cex = 1, group.cex = 1, mid.cex = 1)
+          x.mar = c(0.3,0), y.mar = c(0.3, 0.1), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
 text(0, 1.1, "B", cex=2)
-
 par(mar=c(3,0,4,0))
 par(usr=c(0,1,0,1))
-arc.plot(x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated)
-
-arc.plot( x = setNames(x$loge, x$term), up.list = x$Upregulated, down.list = x$Downregulated, 
-          y.mar = c(0, 0.1), x.mar = c(.95, 0.2), x.scale = 2.6,
-          main = "", x.ticks = 5, x.bound = 2 )
+arc.plot(x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated,
+         x.mar = c(.95,.2), x.scale = 2.6, x.bound = 2, y.mar = c(0, 0.1), main = "")
 text(0, 1.1, "C", cex=2)
-
-go.histogram()
-
 dev.off()
+
+# x <- golubGO$golub
+# arc.plot( x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated, 
+#           y.mar = c(0, 0.1), x.mar = c(.95, 0.2), x.scale = 2.6,
+#           main = "", x.ticks = 5, x.bound = 2 )
+# text(0, 1.1, "C", cex=2)
+
+########################
+### paper figure 2
+########################
+
+pdf("~/tmp/fig2.pdf", height = 5)
+xg <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
+xg <- xg$GO.ID
+x <- leukemiasGO
+x <- lapply(leukemiasGO, function(i) subset(i, GO.ID %in% x))
+x <- lapply(x, function(y) {y$Upregulated <- sapply(y$Upregulated, length);y$Downregulated <- sapply(y$Downregulated, length);y})
+par(mar = c(0,.5,1.5,6))
+go.histogram(x, alpha.term = "pvalCutOff", min.sig = 0, main = "", min.genes = 0, reorder = F,axis.cex = 1,lab.cex = 2,
+             go.selection = xg, show.ttest = F)
+dev.off()
+
+
+########################
+### TESTING
+########################
+
+############### gohist
+
+library(CellPlot)
+data(leukemiasGO)
+x <- leukemiasGO
+x <- lapply(x, head)
+gohist(x)
+gohist(x, name.label = "Term", alpha = 1e-5)
+gohist(x, alpha = 1e-5, size.label = .4)
 
 ### EOF
