@@ -137,8 +137,9 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
     filterframe = (intframe[,grep(paste0("\\.", alpha.term),colnames(intframe))] <= alpha) *  ( intframe[,grep("\\.Significant",colnames(intframe))] >= min.genes )
     intframe = intframe[ apply(filterframe,1,function(x) sum(x, na.rm = T)) >= min.sig, ]
     intframe = intframe[ which(apply( intframe[,grep("\\.Significant",colnames(intframe))], 1, function(x) all( x <= max.genes, na.rm = T) ) ), ]
+    # select terms with at least min.sig samples
     
-  # cluster by significance across groups (other options?)
+  # cluster by significance status (p[enrich]<=alpha) across groups (other options?)
     if (reorder) { 
       sf = intframe[,grep(paste0("\\.", alpha.term),colnames(intframe))]
       sf = sf <= alpha
@@ -168,10 +169,10 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
       if ( neededspace > dv[2] ) { stop(paste0("figure region too small (set device height to above ",round(neededspace,digits = 2)," in)")) }
     }
   
-    layoutmatrix = rbind( c( nc/2+nc+5, rep( nc/2+nc+5, nc+1) ),                # m[3]           
+    layoutmatrix = rbind( c( nc/2+nc+5, rep( nc/2+nc+5, nc+1) ),                # m[3] # top margin  
                           c( nc/2+nc+4, sort( rep( 1:(nc/2), 2) ), nc/2+1 ),    # th
                           c( nc/2+nc+4, (nc/2+2):(nc/2+nc+1), nc/2+nc+2 ),      # bararea
-                          c( nc/2+nc+3, rep( nc/2+nc+3, nc+1) ) )               # m[1]
+                          c( nc/2+nc+3, rep( nc/2+nc+3, nc+1) ) )               # m[1] # bottom margin
   
     barareaheight = ifelse( is.null(bar.scale), 
                             1-m[3]-m[1]-th, 
