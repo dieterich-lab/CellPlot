@@ -7,8 +7,9 @@
 ########################
 
 library(devtools)
-#library(rmarkdown)
-#render('vignettes/CellPlotManual.Rmd')
+library(rmarkdown)
+render('vignettes/CellPlotManual.Rmd')
+render('vignettes/CellPlotManual.Rmd', "pdf_document", output_options = list(toc = TRUE, toc_depth = 3))
 document()
 install(build_vignettes = F)
 library(CellPlot)
