@@ -49,7 +49,7 @@ x <- subset(golubGO$golub, pvalCutOff <= 0.05 & Significant > 5 & !duplicated(PR
 x <- sort(x, decreasing = TRUE, by = "LogEnrich")
 ```
 
-## Cell plot
+## Cell Plot
 
 The function `cell.plot` plots a horizontal barchart of strictly positive values in x. 
 For each entry, a vector of additional values needs to be provided in a list. 
@@ -67,7 +67,7 @@ cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc,
           x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3 )
 ```
 
-## Sym plot
+## Sym Plot
 
 The function `sym.plot` plots a split barchart, showing the proportions of 
 two mutually exclusive sets in relation to a set containing them both. 
@@ -88,7 +88,9 @@ sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, x.annotated = x$An
          x.mar = c(.47, 0), key.n = 7, cex = 1.6, axis.cex = 0.8, group.cex = 0.7 ) 
 ```
 
-## Arc plot
+## Arc Plot
+
+This section will be updated/integrated in future.
 
 ```{r, fig.width=7, fig.height=6, eval=FALSE}
 x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] })
@@ -100,6 +102,10 @@ x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] }
 x$deg.down <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i<0] })
 arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.down, x.mar=c(1,0.5))
 ```
+
+## Go Histogram
+
+This section will be updated/integrated in future.
 
 ## Visual parameters
 
@@ -136,10 +142,9 @@ of from the results applied to the `golub` dataset from the
 package.
 
 It contains microarray gene expression data from leukemia study of *Golub* et
-al. (1999), processed as described in *Dudoit* et al. (2002).
-
-Differential gene expression was performed using a Student t-test to compare
-the two groups. GO annotation was done with the 
+al. (1999), processed as described in *Dudoit* et al. (2002). Differential gene
+expression was performed using a Student t-test to compare the two groups. GO 
+annotation was done with the 
 [Bioconductor/annotate](http://www.bioconductor.org/packages/release/bioc/html/annotate.html)
 and
 [Bioconductor/hu6800.db](http://www.bioconductor.org/packages/release/data/annotation/html/hu6800.db.html)
