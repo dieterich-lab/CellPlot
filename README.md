@@ -1,21 +1,23 @@
 # CellPlot
 
-R package for the integrated visualisation of functional enrichment and expression data.
+R package for the integrated visualisation of functional term enrichment.
 
-## Usage
+For details on functionality, usage and installation, please read the vignette
+at
+[CellPlotManual]("http://htmlpreview.github.io/?https://github.com/dieterich-lab/CellPlot/blob/master/vignettes/CellPlotManual.html")
 
-In an `R` session install the package `devtools` and install the `CellPlot` package directly from github:
+## Quick installation
+
+Start an **R** session and run the commands:
 
 ```
-library(devtools)
-install_github("dieterich-lab/CellPlot", build_vignettes = TRUE)
-library(CellPlot)
-?CellPlot
-vignette("CellPlotManual")
+devtools::install_github("dieterich-lab/CellPlot", build_vignettes = TRUE)
 ```
+
+Read about requirements in the vignette.
 
 ## Legal
 
-Copyright (c) 2015 - Robert Sehlke, Sven E. Templer
-
-See file `LICENSE.md`.
+> Copyright (c) 2015-2016 - Robert Sehlke, Sven E. Templer
+> 
+> See file `LICENSE.md`.
