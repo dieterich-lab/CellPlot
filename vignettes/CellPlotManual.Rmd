@@ -30,7 +30,7 @@ In case of any questions, consider using the
 After installing the package (see [Installation](#installation) section), load it in a running
 **R** session:
 
-```{r, echo=FALSE}
+```{r}
 library(CellPlot)
 library(miscset) # only for examples in the vignette
 ```
