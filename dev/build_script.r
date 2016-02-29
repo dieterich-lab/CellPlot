@@ -149,29 +149,27 @@ leukemiasGO <- lapply(leukemiasGO, sort, TRUE, by = "LogEnrich")
 save(leukemiasGO, file = "data/leukemiasGO.rdata")
 
 ########################
-### paper figure 1
+### paper figure 1 (leukemiasGO version)
 ########################
 
 library(CellPlot)
-data(golubGO)
 data(leukemiasGO)
 
-
-#svg("~/tmp/fig1.svg", height = 10)
-pdf("~/tmp/fig1.pdf", height = 10)
+pdf("~/tmp/fig1b.pdf", height = 10) #svg("~/tmp/fig1.svg", height = 10)
 x <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
 layout(matrix(1:3,nrow=3))
 par(mar=c(3,0,4,0))
 par(usr=c(0,1,0,1))
-cell.plot( x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange,  x.mar = c(0.3,0), y.mar = c(0.1,0.3),
-           main = "GO enrichment in NoL vs CLL differential gene expression")
+cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.mar = c(0.3,0), y.mar = c(0.1,0.3),
+          main = "GO enrichment in NoL vs CLL differential gene expression")
 text(0, 1.1, "A", cex=2)
 par(usr=c(0,1,0,1))
-sym.plot( x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
-          x.mar = c(0.3,0), y.mar = c(0.3, 0.1), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
+sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
+         x.mar = c(0.3,0), y.mar = c(0.3, 0.1), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
 text(0, 1.1, "B", cex=2)
 par(mar=c(3,0,4,0))
 par(usr=c(0,1,0,1))
+# still some bugs here:
 arc.plot(x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated,
          x.mar = c(.95,.2), x.scale = 2.6, x.bound = 2, y.mar = c(0, 0.1), main = "")
 text(0, 1.1, "C", cex=2)
@@ -187,14 +185,22 @@ dev.off()
 ### paper figure 2
 ########################
 
+library(CellPlot)
+data(leukemiasGO)
+
 pdf("~/tmp/fig2.pdf", height = 5)
 xg <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
 xg <- xg$GO.ID
 x <- leukemiasGO
-x <- lapply(leukemiasGO, function(i) subset(i, GO.ID %in% x))
-x <- lapply(x, function(y) {y$Upregulated <- sapply(y$Upregulated, length);y$Downregulated <- sapply(y$Downregulated, length);y})
-par(mar = c(0,.5,1.5,6))
-go.histogram(x, alpha.term = "pvalCutOff", min.sig = 0, main = "", min.genes = 0, reorder = F,axis.cex = 1,lab.cex = 2,
+#x <- lapply(leukemiasGO, function(i) subset(i, GO.ID %in% xg))
+x <- lapply(x, function(y) {
+  y$Upregulated <- sapply(y$log2FoldChange, function(z) sum(z>0))
+  y$Downregulated <- sapply(y$log2FoldChange, function(z) sum(z<0))
+  y})
+par(mar = c(0,.5,2.5,8))
+go.histogram(x, alpha.term = "pvalCutOff", min.sig = 0, min.genes = 0, 
+             main = "GO enrichment\nin leukemia differential gene expression\ncompared to control samples", 
+             reorder = F,axis.cex = 1, lab.cex = 1.5,
              go.selection = xg, show.ttest = F)
 dev.off()
 
