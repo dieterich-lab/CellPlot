@@ -4,3 +4,4 @@
 *.Rproj
 dev.r
 inst/doc
+.DS_Store
