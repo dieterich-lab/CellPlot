@@ -1,6 +1,6 @@
 ### build script for the CellPlot package
 
-# set working directory to package source folder root
+stop("dontrun")
 
 ########################
 ### package
@@ -29,16 +29,15 @@ foo <- function () { NULL }
 ### dataset golubGO
 ########################
 
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("hu6800.db")
-#biocLite("multtest")
-#biocLite("topGO")
-
+# CRAN
+library(parallel)
 library(plyr)
-library(multtest)
+library(miscset)
+# Bioconductor
+library(topGO)
 library(annotate)
 library(hu6800.db)
-library(topGO)
+library(multtest)
 
 data(golub)
 
@@ -53,7 +52,7 @@ DEG <- do.call(rbind, mclapply(A, function(x){
     log2fc  = t$fc,
     p = t$p.value,
     row.names = NULL)
-}, mc.cores = 10))
+}, mc.cores = 3))
 DEG$padj <- p.adjust(DEG$p)
 DEG <- data.frame(gene = golub.gnames[,3], DEG, stringsAsFactors = F)
 DEG <- subset(DEG, !is.na(log2fc) & !is.na(padj))
@@ -71,34 +70,29 @@ GO <- new("topGOdata", ontology = "BP", description = 'golub',
 GOsig <- lapply(list(golub=GO), function (x) {
   t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
   s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
-  r$LogEnrich <- r$Significant / r$Expected
-  return(r)
+  GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
 })
 
-golubGO <- Map(mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
+golubGO <- Map(CellPlot::mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
 golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
-
 save(golubGO, file = "data/golubGO.rdata")
 
 ########################
 ### dataset leukemiasGO
 ########################
 
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("hu6800.db")
-#biocLite("leukemiasEset")
-#biocLite("topGO")
-
-library(leukemiasEset)
+# CRAN
+library(parallel)
+library(plyr)
+library(miscset)
+# Bioconductor
+library(BiocParallel)
 library(DESeq2)
+library(topGO)
 library(annotate)
 library(hu6800.db)
-library(plyr)
-library(topGO)
-library(BiocParallel)
-library(parallel)
-library(miscset)
+library(leukemiasEset)
+
 data(leukemiasEset)
 
 M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
@@ -116,12 +110,7 @@ A <- sapply(A, as.integer)
 A <- t(A)
 
 DEG <- DESeqDataSetFromMatrix(countData = A, colData = s, design = ~ LeukemiaType)
-# DEG <- estimateSizeFactors(DEG)
-# DEG <- estimateDispersionsGeneEst(DEG)
-# dispersions(DEG) <- mcols(DEG)$dispGeneEst
-# DEG <- nbinomLRT(DEG, reduced = ~ 1)
-DEG <- DESeq(DEG, fitType = "mean", parallel = T, BPPARAM = MulticoreParam(20))
-
+DEG <- DESeq(DEG, fitType = "mean") #, parallel = T, BPPARAM = MulticoreParam(3))
 DEG <- lapply(levels(s$LeukemiaType)[-1], function (x) {
   x <- results(DEG, c("LeukemiaType", x, "NoL"), "LeukemiaType", alpha = .05)
   x <- as.data.frame(x)
@@ -137,15 +126,11 @@ GO <- lapply(DEG, function (x) new(
 GOsig <- mclapply(GO, function (x) {
   t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
   s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
-  r$LogEnrich <- r$Significant / r$Expected
-  return(r)
-}, mc.cores = length(GO))
+  GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
+}, mc.cores = 3)
 
-leukemiasGO <- Map(mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
+leukemiasGO <- Map(CellPlot::mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
 leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
-leukemiasGO <- lapply(leukemiasGO, sort, TRUE, by = "LogEnrich")
-
 save(leukemiasGO, file = "data/leukemiasGO.rdata")
 
 ########################
@@ -153,25 +138,36 @@ save(leukemiasGO, file = "data/leukemiasGO.rdata")
 ########################
 
 library(CellPlot)
+library(miscset)
 data(leukemiasGO)
 
+### ERRORS IN ARC-PLOT
 pdf("~/tmp/fig1b.pdf", height = 10) #svg("~/tmp/fig1.svg", height = 10)
-x <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
+x <- leukemiasGO$CLL
+x <- subset(x, Annotated > 5 & sapply(log2FoldChange, function(i)any(i>0)) & sapply(log2FoldChange, function(i)any(i<0)))
+#& pvalCutOff <= 0.05 
+x$Enrichment <- x$Significant / x$Expected
+x$log2FoldChange <- Map(setNames, x$log2FoldChange, x$ENSEMBL)
+x$Down <- lapply(x$log2FoldChange, function (y) y[y<0])
+x$Up <- lapply(x$log2FoldChange, function (y) y[y>0])
+x <- sort(x, TRUE, "Enrichment")
+x <- head(x, 8)
 layout(matrix(1:3,nrow=3))
-par(mar=c(3,0,4,0))
-par(usr=c(0,1,0,1))
-cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.mar = c(0.3,0), y.mar = c(0.1,0.3),
-          main = "GO enrichment in NoL vs CLL differential gene expression")
+#par(mar=c(3,0,4,0))
+#par(usr=c(0,1,0,1))
+cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2FoldChange, x.mar = c(0.3,0), y.mar = c(0.2,0.1),
+          space = .2, bar.scale = .7,
+          main = "GO enrichment in CLL/NoL differential gene expression")
 text(0, 1.1, "A", cex=2)
-par(usr=c(0,1,0,1))
-sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
-         x.mar = c(0.3,0), y.mar = c(0.3, 0.1), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
+#par(usr=c(0,1,0,1))
+sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
+         x.mar = c(0.3,0), y.mar = c(0.3, 0.0), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
 text(0, 1.1, "B", cex=2)
-par(mar=c(3,0,4,0))
-par(usr=c(0,1,0,1))
+#par(mar=c(3,0,4,0))
+#par(usr=c(0,1,0,1))
 # still some bugs here:
-arc.plot(x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated,
-         x.mar = c(.95,.2), x.scale = 2.6, x.bound = 2, y.mar = c(0, 0.1), main = "")
+arc.plot(x = setNames(x$Enrichment, x$Term), up.list = x$Up, down.list = x$Down,
+         x.mar = c(.9,0.3), x.scale = 1.7, y.mar = c(0, 0), main = "") # x.mar = c(1,0.3), scale = 2
 text(0, 1.1, "C", cex=2)
 dev.off()
 
@@ -186,22 +182,25 @@ dev.off()
 ########################
 
 library(CellPlot)
+library(miscset)
 data(leukemiasGO)
 
 pdf("~/tmp/fig2.pdf", height = 5)
-xg <- head(subset(leukemiasGO$CLL, Annotated > 5), 8)
-xg <- xg$GO.ID
-x <- leukemiasGO
-#x <- lapply(leukemiasGO, function(i) subset(i, GO.ID %in% xg))
-x <- lapply(x, function(y) {
-  y$Upregulated <- sapply(y$log2FoldChange, function(z) sum(z>0))
-  y$Downregulated <- sapply(y$log2FoldChange, function(z) sum(z<0))
-  y})
+y <- lapply(leukemiasGO, function (x) {
+  x$Enrichment <- x$Significant / x$Expected
+  x$Upregulated <- sapply(x$log2FoldChange, function (z) sum(z>0))
+  x$Downregulated <- sapply(x$log2FoldChange, function (z) sum(z<0))
+  x
+})
+yterms <- unique(unlist(lapply(y, function(x){
+  x <- subset(x, Annotated > 5 & pvalCutOff <= 0.05 & !duplicated(ENSEMBL))
+  head(sort(x, TRUE, "Enrichment"), 20)$GO.ID
+})))
 par(mar = c(0,.5,2.5,8))
-go.histogram(x, alpha.term = "pvalCutOff", min.sig = 0, min.genes = 0, 
+go.histogram(y, alpha.term = "pvalCutOff", min.genes = 0, max.genes = 1e10, go.selection = yterms,
              main = "GO enrichment\nin leukemia differential gene expression\ncompared to control samples", 
-             reorder = F,axis.cex = 1, lab.cex = 1.5,
-             go.selection = xg, show.ttest = F)
+             axis.cex = 1, lab.cex = 1.5)
+#reorder = F,
 dev.off()
 
 
