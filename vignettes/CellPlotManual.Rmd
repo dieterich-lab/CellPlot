@@ -45,8 +45,19 @@ data("leukemiasGO")
 Reduce set of GO terms to display using the base **R** function `subset`:
 
 ```{r}
+# select from the golubGO data:
 x <- subset(golubGO$golub, pvalCutOff <= 0.05 & Significant > 5 & !duplicated(PROBEID))
-x <- sort(x, decreasing = TRUE, by = "LogEnrich")
+x$Enrichment <- x$Significant / x$Expected
+x <- sort(x, decreasing = TRUE, by = "Enrichment")
+x <- head(x, 10)
+# select from the leukemiasGO data:
+y <- lapply(leukemiasGO, function (x) {
+  x$Enrichment <- x$Significant / x$Expected
+  x$Upregulated <- sapply(x$log2FoldChange, function (y) sum(y>0))
+  x$Downregulated <- sapply(x$log2FoldChange, function (y) sum(y<0))
+  x
+})
+
 ```
 
 ## Cell Plot
@@ -58,11 +69,11 @@ A typical usage scenario is plotting the enrichment of Gene Ontology terms,
 with individual cells reflecting the differential regulation of the constituent genes.
 
 ```{r, eval=FALSE}
-cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc,
+cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc,
           main ="GO enrichment on ALL/AML gene expression")
 ```
 ```{r, fig.width=7, fig.height=8, echo=FALSE}
-cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, 
+cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, 
           cell.bounds = c(-6,6), main ="GO enrichment on ALL/AML gene expression", 
           x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3 )
 ```
@@ -79,11 +90,11 @@ same as for cell.plot(), or as separate vectors x.up and x.down,
 providing the numbers of up- and down-regulated genes in the same order as x.
 
 ```{r, eval=FALSE}
-sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
+sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
          main ="GO enrichment on ALL/AML gene expression")
 ```
 ```{r, fig.width=7, fig.height=6, echo=FALSE}
-sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
+sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
          main = "GO enrichment on ALL/AML gene expression",
          x.mar = c(.47, 0), key.n = 7, cex = 1.6, axis.cex = 0.8, group.cex = 0.7 ) 
 ```
@@ -152,71 +163,15 @@ packages.
 
 ```{r, eval=FALSE}
 # CRAN
-library(plyr)
-# Bioconductor
-library(topGO)
-library(annotate)
-library(hu6800.db)
-library(multtest)
-
-data(golub)
-
-A <- split(golub, seq(nrow(golub)))
-DEG <- do.call(rbind, mclapply(A, function(x){
-  t <- t.test(x[as.logical(golub.cl)], x[!as.logical(golub.cl)])
-  t$fc <- t$estimate[1]/t$estimate[2]
-  suppressWarnings(t$fc <- log2(t$fc))
-  data.frame(
-    mean.aml = t$estimate[1],
-    mean.all = t$estimate[2],
-    log2fc  = t$fc,
-    p = t$p.value,
-    row.names = NULL)
-}, mc.cores = 10))
-DEG$padj <- p.adjust(DEG$p)
-DEG <- data.frame(gene = golub.gnames[,3], DEG, stringsAsFactors = F)
-DEG <- subset(DEG, !is.na(log2fc) & !is.na(padj))
-
-M <- select(hu6800.db, DEG$gene, c("PROBEID","GO"))
-genes <- dlply(subset(M, ONTOLOGY == "BP"), "PROBEID", function (x) unique(x$GO))
-DEG <- subset(DEG, gene %in% names(genes))
-
-GO <- new("topGOdata", ontology = "BP", description = 'golub',
-          allGenes = setNames(DEG$padj, DEG$gene),
-          geneSelectionFun = function (allScore) { allScore <= 0.05 },
-          annotationFun = annFUN.gene2GO, gene2GO = genes)
-
-GOsig <- lapply(list(golub=GO), function (x) {
-  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
-  s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
-  r$LogEnrich <- r$Significant / r$Expected
-  return(r)
-})
-
-golubGO <- Map(mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
-golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
-```
-
-## Dataset `leukemiasGO`
-
-This section provides code and comments on the workflow to perform differential
-expression of genes analysis and the gene ontology term enrichment
-of from the results applied to the `leukemiasEset` dataset from the 
-[Bioconductor/leukemiasEset](http://www.bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)
-package.
-
-```{r, eval=FALSE}
-# CRAN
 library(parallel)
 library(plyr)
 library(miscset)
 # Bioconductor
+library(BiocParallel)
 library(DESeq2)
 library(topGO)
 library(annotate)
 library(hu6800.db)
-library(BiocParallel)
 library(leukemiasEset)
 
 data(leukemiasEset)
@@ -236,12 +191,68 @@ A <- sapply(A, as.integer)
 A <- t(A)
 
 DEG <- DESeqDataSetFromMatrix(countData = A, colData = s, design = ~ LeukemiaType)
-# DEG <- estimateSizeFactors(DEG)
-# DEG <- estimateDispersionsGeneEst(DEG)
-# dispersions(DEG) <- mcols(DEG)$dispGeneEst
-# DEG <- nbinomLRT(DEG, reduced = ~ 1)
-DEG <- DESeq(DEG, fitType = "mean", parallel = T, BPPARAM = MulticoreParam(20))
+DEG <- DESeq(DEG, fitType = "mean") #, parallel = T, BPPARAM = MulticoreParam(3))
+DEG <- lapply(levels(s$LeukemiaType)[-1], function (x) {
+  x <- results(DEG, c("LeukemiaType", x, "NoL"), "LeukemiaType", alpha = .05)
+  x <- as.data.frame(x)
+  x$gene <- rownames(x)
+  return(x)
+})
+names(DEG) <- levels(s$LeukemiaType)[-1]
 
+GO <- lapply(DEG, function (x) new(
+  "topGOdata", ontology = "BP", description = 'Leukemia', allGenes = setNames(x$pvalue, x$gene), 
+  geneSelectionFun = function (allScore) { allScore <= 0.05 }, annotationFun = annFUN.gene2GO, gene2GO = genes))
+
+GOsig <- mclapply(GO, function (x) {
+  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
+  s <- getSigGroups(x, t)
+  GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
+}, mc.cores = 3)
+
+leukemiasGO <- Map(CellPlot::mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
+leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
+```
+
+## Dataset `leukemiasGO`
+
+This section provides code and comments on the workflow to perform differential
+expression of genes analysis and the gene ontology term enrichment
+of from the results applied to the `leukemiasEset` dataset from the 
+[Bioconductor/leukemiasEset](http://www.bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)
+package.
+
+```{r, eval=FALSE}
+# CRAN
+library(parallel)
+library(plyr)
+library(miscset)
+# Bioconductor
+library(BiocParallel)
+library(DESeq2)
+library(topGO)
+library(annotate)
+library(hu6800.db)
+library(leukemiasEset)
+
+data(leukemiasEset)
+
+M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
+M <- subset(M, ONTOLOGY == "BP", c("ENSEMBL","GO"))
+M <- M[!duplicated(M),]
+
+genes <- dlply(M, "ENSEMBL", function (x) unique(x$GO))
+
+A <- as(leukemiasEset,"data.frame")
+A <- subset(A, LeukemiaType %in% c("NoL","ALL", "AML", "CLL"))
+s <- subset(A, select = "LeukemiaType")
+s$LeukemiaType <- relevel(factor(as.character(s$LeukemiaType)), "NoL")
+A <- subset(A, select = colnames(A) %in% names(genes))
+A <- sapply(A, as.integer)
+A <- t(A)
+
+DEG <- DESeqDataSetFromMatrix(countData = A, colData = s, design = ~ LeukemiaType)
+DEG <- DESeq(DEG, fitType = "mean", parallel = T, BPPARAM = MulticoreParam(20))
 DEG <- lapply(levels(s$LeukemiaType)[-1], function (x) {
   x <- results(DEG, c("LeukemiaType", x, "NoL"), "LeukemiaType", alpha = .05)
   x <- as.data.frame(x)
