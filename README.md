@@ -4,7 +4,7 @@ R package for the integrated visualisation of functional term enrichment.
 
 For details on functionality, usage and installation, please read the vignette
 at
-[CellPlotManual]("http://htmlpreview.github.io/?https://github.com/dieterich-lab/CellPlot/blob/master/vignettes/CellPlotManual.html")
+[CellPlotManual](http://htmlpreview.github.io/?https://github.com/dieterich-lab/CellPlot/blob/master/vignettes/CellPlotManual.html)
 
 ## Quick installation
 
