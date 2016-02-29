@@ -2,140 +2,54 @@
 title: "CellPlotManual"
 author: "Sven E. Templer, Robert Sehlke"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{CellPlotManual}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-## Description
+# Description
 
-`CellPlot` is a [GNU R](http://r-project.org) package with plot methods for the integrated visualisation of functional enrichment and expression data. It can be used to display commonly used gene ontology (GO) enrichment analysis from differential gene expression.
+**CellPlot** is a [GNU R](http://r-project.org) package with plot methods for the
+integrated visualisation of functional term enrichment and expression data. 
+It can be used to display commonly used gene ontology (GO) term enrichment 
+analysis from differential expression of genes (DEG) studies.
 
-The development platform of this software is hosted on [github](https://github.com/dieterich-lab/CellPlot). In case there are any questions, consider using the [issues](https://github.com/dieterich-lab/CellPlot/issues) system.
+The development platform of this software is hosted on 
+[github](https://github.com/dieterich-lab/CellPlot). 
+In case of any questions, consider using the 
+[issues](https://github.com/dieterich-lab/CellPlot/issues) system.
 
-### Installation
+# Usage
 
-You can install the package to use it in any R session. The stable versions will be published on the comprehensive R archive network (CRAN) servers. The most recent version can be found on https://github.com/dieterich-lab/CellPlot. With the `devtools` package, it is easy to install:
+## Load package and data
 
-```{r, eval=FALSE}
-install.packages("devtools")
-library(devtools)
-install_github('dieterich-lab/CellPlot', build_vignettes = TRUE)
-```
+After installing the package (see [Installation](#installation) section), load it in a running
+**R** session:
 
-### Usage
-
-Once installed, you need to load the package with `library(CellPlot)` into the current session.
-Access general help with `?CellPlot` or `?` followed by any function name from the package. 
-This manual can also be viewed with `vignette("CellPlotManual")`.
-
-## DEG and GO enrichment analysis
-
-The following code represents a simple analysis workflow to analyse/test for differentially regulated genes 
-from two conditions, perform GO enrichment analysis and merge the data to a `data.frame`. 
-The example data therefore is taken from the `multtest` package, available on [Bioconductor](http://www.bioconductor.org/packages/release/bioc/html/multtest.html).
-It contains microarray gene expression data from leukemia study of *Golub* et al. (1999), processed as described in *Dudoit* et al. (2002).
-
-Differential gene expression was performed using a Student t-test to compare the two groups. 
-GO annotation was done with the `annotate` and `hu6800.db` packages from Bioconductor. 
-The `topGO` package was utilized to perform a GO enrichment test based on Fisher's exact test. 
-Data of the DEG and GO enrichment was merged with the provided function `go.enrich`.
-The code to create the data object is shown in the examples section. 
-For help about the data set also read the help page (`?golubstat`) of the resulting and implemented data set.
-
-```{r, eval=FALSE}
-### Differential gene expression
-### and GO enrichment analysis
-### of the golub dataset:
-
-## install dependencies
-source("http://bioconductor.org/biocLite.R")
-biocLite("hu6800.db")
-biocLite("multtest")
-biocLite("topGO")
-
-## load dependencies
+```{r, echo=FALSE}
 library(CellPlot)
-library(plyr)
-library(multtest)
-library(annotate)
-library(hu6800.db)
-library(topGO)
-
-## data import
-data(golub)
-
-## differential gene expression testing
-golub.test <- function (e, i, n) {
-  i <- as.logical(i)
-  a <- split(e[,i],seq(nrow(e)))
-  b <- split(e[,!i],seq(nrow(e)))
-  fun.map <- function (a, b) {
-    t <- t.test(a, b)
-    t$fc <- t$estimate[1]/t$estimate[2]
-    suppressWarnings(t$fc <- log2(t$fc))
-    data.frame(
-      mean.aml = t$estimate[1],
-      mean.all = t$estimate[2],
-      log2fc  = t$fc,
-      p = t$p.value,
-      row.names = NULL)
-  }
-  s <- Map(fun.map, a, b)
-  s <- do.call(rbind, s)
-  s$p.adj <- p.adjust(s$p)
-  s <- data.frame(n, s, stringsAsFactors = FALSE)
-  s <- subset(s, !is.na(log2fc))
-  return(s)
-}
-
-degdata <- golub.test(golub, golub.cl, data.frame(
-  gene = golub.gnames[,3], index = as.integer(golub.gnames[,1]),
-  stringsAsFactors = FALSE))
-
-## gene ontology annotation
-goterms <- select(
-  hu6800.db, degdata$gene,
-  c("PROBEID","ALIAS","GO","ENSEMBL","ENTREZID"))
-goterms <- dlply(
-  subset(goterms, ONTOLOGY == "BP"), "PROBEID",
-  function (x) unique(x$GO))
-
-## topGO object
-godata <- new(
-  "topGOdata", ontology = "BP", description = 'golub',
-  allGenes = setNames(degdata$p.adj, degdata$gene),
-  geneSelectionFun = function (allScore) { allScore <= 0.05 },
-  annotationFun = annFUN.gene2GO, gene2GO = goterms)
-
-## gene ontology enrichment
-#golubstat <- go.enrich(godata, degdata, p.max = 1)
-golubstat <- go.enrich(godata, degdata)
+library(miscset) # only for examples in the vignette
 ```
 
-A table like `degdata` from this example might also be obtained from DEG analysis with common tools 
-as used in the Tuxedo pipeline (tophat/cuffdiff) and imported with `read.table`. 
-The resulting data object is available with our package. You can load it with the `data` function.
-The columns are described in the help page, and the data structure can be investigated with the `str` and `head` functions, e.g.:
+The example data is available with the commands:
 
 ```{r}
-library(CellPlot)
-data("golubstat")
-str(head(subset(golubstat, !duplicated(genes))))
+data("golubGO")
+data("leukemiasGO")
 ```
 
-## Visualization of GO enrichment
-
-For the examples, we use a subset of the GO enrichment analysis of the `golubstat` data. Create the subset with:
+Reduce set of GO terms to display using the base **R** function `subset`:
 
 ```{r}
-x <- subset(golubstat, p<=.05 & significant>4 & !duplicated(genes))
-x <- head(x, 10)
+x <- subset(golubGO$golub, pvalCutOff <= 0.05 & Significant > 5 & !duplicated(PROBEID))
+x <- sort(x, decreasing = TRUE, by = "LogEnrich")
 ```
 
-### Cell plot
+## Cell plot
 
 The function `cell.plot` plots a horizontal barchart of strictly positive values in x. 
 For each entry, a vector of additional values needs to be provided in a list. 
@@ -143,13 +57,17 @@ The additional values are plotted as cells subdividing the length of the corresp
 A typical usage scenario is plotting the enrichment of Gene Ontology terms, 
 with individual cells reflecting the differential regulation of the constituent genes.
 
-```{r, fig.width=7, fig.height=6}
-cell.plot( x = setNames(x$loge, x$term), cells = x$deg.log2fc, x.bound = 2, 
-           cell.bounds = c(-6,6), space = 0.15, main ="", y.mar = c(0.1,0), 
-           x.mar = c(.47, 0), key.n = 7, cex = 1.6, cell.outer = 3 )
+```{r, eval=FALSE}
+cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc,
+          main ="GO enrichment on ALL/AML gene expression")
+```
+```{r, fig.width=7, fig.height=8, echo=FALSE}
+cell.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, 
+          cell.bounds = c(-6,6), main ="GO enrichment on ALL/AML gene expression", 
+          x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3 )
 ```
 
-### Sym plot
+## Sym plot
 
 The function `sym.plot` plots a split barchart, showing the proportions of 
 two mutually exclusive sets in relation to a set containing them both. 
@@ -160,21 +78,30 @@ Associated genes may be provided as a list of vectors of expression values,
 same as for cell.plot(), or as separate vectors x.up and x.down, 
 providing the numbers of up- and down-regulated genes in the same order as x.
 
-```{r, fig.width=7, fig.height=6}
-sym.plot( ticksize = 5, x = setNames(x$loge, x$term), cells = x$deg.log2fc, 
-          x.annotated = x$annotated, y.mar = c(0.1,0), x.mar = c(.47, 0), key.n = 7, 
-          key.lab = "GO Term enrichment", cex = 1.6, axis.cex = 0.8, group.cex = 0.7 )
+```{r, eval=FALSE}
+sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
+         main ="GO enrichment on ALL/AML gene expression")
+```
+```{r, fig.width=7, fig.height=6, echo=FALSE}
+sym.plot(x = setNames(x$LogEnrich, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
+         main = "GO enrichment on ALL/AML gene expression",
+         x.mar = c(.47, 0), key.n = 7, cex = 1.6, axis.cex = 0.8, group.cex = 0.7 ) 
 ```
 
-### Arc plot
+## Arc plot
 
-```{r, fig.width=7, fig.height=6}
+```{r, fig.width=7, fig.height=6, eval=FALSE}
+x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] })
+x$deg.down <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i<0] })
+arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.down, x.mar=c(1,0.5))
+```
+```{r, fig.width=7, fig.height=6, echo=FALSE, eval=FALSE}
 x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] })
 x$deg.down <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i<0] })
 arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.down, x.mar=c(1,0.5))
 ```
 
-### Visual parameters
+## Visual parameters
 
 Both functions provide a range of parameters to tweak the visual appearance of the plots.
 
@@ -193,3 +120,175 @@ Both functions provide a range of parameters to tweak the visual appearance of t
 * **Colour keys** can be adjusted in their resolution (number of boxes) using the `key.n` parameter.
 * **Gridlines** may be hidden via the `gridlines` parameter.
 
+# Workflows
+
+Gene ontology term enrichment in differential gene expression data can be 
+performed using the 
+[Bioconductor/topGO](http://www.bioconductor.org/packages/release/bioc/html/topGO.html)
+package.
+
+## Dataset `golubGO`
+
+This section provides code and comments on the workflow to perform differential
+expression of genes (DEG) analysis and the gene ontology term (GO) enrichment
+of from the results applied to the `golub` dataset from the 
+[Bioconductor/multtest](http://www.bioconductor.org/packages/release/bioc/html/multtest.html)
+package.
+
+It contains microarray gene expression data from leukemia study of *Golub* et
+al. (1999), processed as described in *Dudoit* et al. (2002).
+
+Differential gene expression was performed using a Student t-test to compare
+the two groups. GO annotation was done with the 
+[Bioconductor/annotate](http://www.bioconductor.org/packages/release/bioc/html/annotate.html)
+and
+[Bioconductor/hu6800.db](http://www.bioconductor.org/packages/release/data/annotation/html/hu6800.db.html)
+packages. 
+
+```{r, eval=FALSE}
+# CRAN
+library(plyr)
+# Bioconductor
+library(topGO)
+library(annotate)
+library(hu6800.db)
+library(multtest)
+
+data(golub)
+
+A <- split(golub, seq(nrow(golub)))
+DEG <- do.call(rbind, mclapply(A, function(x){
+  t <- t.test(x[as.logical(golub.cl)], x[!as.logical(golub.cl)])
+  t$fc <- t$estimate[1]/t$estimate[2]
+  suppressWarnings(t$fc <- log2(t$fc))
+  data.frame(
+    mean.aml = t$estimate[1],
+    mean.all = t$estimate[2],
+    log2fc  = t$fc,
+    p = t$p.value,
+    row.names = NULL)
+}, mc.cores = 10))
+DEG$padj <- p.adjust(DEG$p)
+DEG <- data.frame(gene = golub.gnames[,3], DEG, stringsAsFactors = F)
+DEG <- subset(DEG, !is.na(log2fc) & !is.na(padj))
+
+M <- select(hu6800.db, DEG$gene, c("PROBEID","GO"))
+genes <- dlply(subset(M, ONTOLOGY == "BP"), "PROBEID", function (x) unique(x$GO))
+DEG <- subset(DEG, gene %in% names(genes))
+
+GO <- new("topGOdata", ontology = "BP", description = 'golub',
+          allGenes = setNames(DEG$padj, DEG$gene),
+          geneSelectionFun = function (allScore) { allScore <= 0.05 },
+          annotationFun = annFUN.gene2GO, gene2GO = genes)
+
+GOsig <- lapply(list(golub=GO), function (x) {
+  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
+  s <- getSigGroups(x, t)
+  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
+  r$LogEnrich <- r$Significant / r$Expected
+  return(r)
+})
+
+golubGO <- Map(mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
+golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
+```
+
+## Dataset `leukemiasGO`
+
+This section provides code and comments on the workflow to perform differential
+expression of genes analysis and the gene ontology term enrichment
+of from the results applied to the `leukemiasEset` dataset from the 
+[Bioconductor/leukemiasEset](http://www.bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)
+package.
+
+```{r, eval=FALSE}
+# CRAN
+library(parallel)
+library(plyr)
+library(miscset)
+# Bioconductor
+library(DESeq2)
+library(topGO)
+library(annotate)
+library(hu6800.db)
+library(BiocParallel)
+library(leukemiasEset)
+
+data(leukemiasEset)
+
+M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
+M <- subset(M, ONTOLOGY == "BP", c("ENSEMBL","GO"))
+M <- M[!duplicated(M),]
+
+genes <- dlply(M, "ENSEMBL", function (x) unique(x$GO))
+
+A <- as(leukemiasEset,"data.frame")
+A <- subset(A, LeukemiaType %in% c("NoL","ALL", "AML", "CLL"))
+s <- subset(A, select = "LeukemiaType")
+s$LeukemiaType <- relevel(factor(as.character(s$LeukemiaType)), "NoL")
+A <- subset(A, select = colnames(A) %in% names(genes))
+A <- sapply(A, as.integer)
+A <- t(A)
+
+DEG <- DESeqDataSetFromMatrix(countData = A, colData = s, design = ~ LeukemiaType)
+# DEG <- estimateSizeFactors(DEG)
+# DEG <- estimateDispersionsGeneEst(DEG)
+# dispersions(DEG) <- mcols(DEG)$dispGeneEst
+# DEG <- nbinomLRT(DEG, reduced = ~ 1)
+DEG <- DESeq(DEG, fitType = "mean", parallel = T, BPPARAM = MulticoreParam(20))
+
+DEG <- lapply(levels(s$LeukemiaType)[-1], function (x) {
+  x <- results(DEG, c("LeukemiaType", x, "NoL"), "LeukemiaType", alpha = .05)
+  x <- as.data.frame(x)
+  x$gene <- rownames(x)
+  return(x)
+})
+names(DEG) <- levels(s$LeukemiaType)[-1]
+
+GO <- lapply(DEG, function (x) new(
+  "topGOdata", ontology = "BP", description = 'Leukemia', allGenes = setNames(x$pvalue, x$gene), 
+  geneSelectionFun = function (allScore) { allScore <= 0.05 }, annotationFun = annFUN.gene2GO, gene2GO = genes))
+
+GOsig <- mclapply(GO, function (x) {
+  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
+  s <- getSigGroups(x, t)
+  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
+  r$LogEnrich <- r$Significant / r$Expected
+  return(r)
+}, mc.cores = length(GO))
+
+leukemiasGO <- Map(mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
+leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
+leukemiasGO <- lapply(leukemiasGO, sort, TRUE, by = "LogEnrich")
+```
+
+# Installation
+
+## CellPlot
+
+Install the latest version from the repository on
+[github.com/dieterich-lab/CellPlot](https://github.com/dieterich-lab/CellPlot). 
+With the `devtools` package, it is an easy task:
+
+```{r, eval=FALSE}
+install.packages("devtools")
+library(devtools)
+install_github('dieterich-lab/CellPlot', build_vignettes = TRUE)
+```
+
+## Dependencies
+
+```{r, eval=FALSE}
+# load bioconductor functions
+source("https://bioconductor.org/biocLite.R")
+
+# install packages for CellPlot
+install.packages("plyr")
+biocLite("topGO")
+
+# install packages for vignette, datasets, etc.
+install.packages("miscset")
+biocLite("leukemiasEset")
+biocLite("multtest")
+biocLite("hu6800.db")
+```
