@@ -67,15 +67,15 @@ GO <- new("topGOdata", ontology = "BP", description = 'golub',
           geneSelectionFun = function (allScore) { allScore <= 0.05 },
           annotationFun = annFUN.gene2GO, gene2GO = genes)
 
-GO <- lapply(list(golub=GO), function (x) {
+GOsig <- lapply(list(golub=GO), function (x) {
   t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
   s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = 20) #length(x@graph@nodes)
+  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
   r$LogEnrich <- r$Significant / r$Expected
   return(r)
 })
 
-golubGO <- Map(mergeGOdeg, GO, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
+golubGO <- Map(mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
 golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
 
 save(golubGO, file = "data/golubGO.rdata")
