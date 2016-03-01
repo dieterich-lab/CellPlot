@@ -72,10 +72,10 @@ with individual cells reflecting the differential regulation of the constituent 
 cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc,
           main ="GO enrichment on ALL/AML gene expression")
 ```
-```{r, fig.width=7, fig.height=8, echo=FALSE}
+```{r, fig.width=6, fig.height=8, echo=FALSE}
 cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, 
           cell.bounds = c(-6,6), main ="GO enrichment on ALL/AML gene expression", 
-          x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3 )
+          x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3, bar.scale = .7, space = .2)
 ```
 
 ## Sym Plot
@@ -93,7 +93,7 @@ providing the numbers of up- and down-regulated genes in the same order as x.
 sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
          main ="GO enrichment on ALL/AML gene expression")
 ```
-```{r, fig.width=7, fig.height=6, echo=FALSE}
+```{r, fig.width=6, fig.height=6, echo=FALSE}
 sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
          main = "GO enrichment on ALL/AML gene expression",
          x.mar = c(.47, 0), key.n = 7, cex = 1.6, axis.cex = 0.8, group.cex = 0.7 ) 
