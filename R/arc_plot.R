@@ -98,7 +98,7 @@ arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.boun
   props = vector(length = length(up.list))
   for (l in 1:length(up.list)) { 
     all.list[[l]] = c(up.list[[l]], down.list[[l]])
-    props[l] = min( length(down.list[[l]])/length(up.list[[l]]), 1)
+    props[l] = min( length(down.list[[l]])/length(all.list[[l]]), 1)
   }
   enrich = x
   eb = ifelse(is.null(x.bound),max(x),x.bound)
