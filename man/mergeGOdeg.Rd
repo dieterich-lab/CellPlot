@@ -5,7 +5,7 @@
 \title{Merge topGO results with gene expression tables}
 \usage{
 mergeGOdeg(go, deg, map, go.go = "GO.ID", deg.gene = "gene",
-  deg.p = "pvalue", deg.lfc = "log2FoldChange", map.go = "GO",
+  deg.stats = c("pvalue", "log2FoldChange"), map.go = "GO",
   map.gene = "gene", as.intersect = FALSE)
 }
 \arguments{
@@ -19,12 +19,12 @@ mergeGOdeg(go, deg, map, go.go = "GO.ID", deg.gene = "gene",
 
 \item{deg.gene}{The column name for the gene identifiers.}
 
+\item{deg.stats}{The column name(s) for the gene expression statistics
+(e.g. p-values or log2 fold changes).}
+
 \item{map.go}{The column name for the GO identifiers.}
 
 \item{map.gene}{The column name for the gene identifiers.}
-
-\item{deg.stats}{The column name(s) for the gene expression statistics
-(e.g. p-values or log2 fold changes).}
 }
 \description{
 Merge a topGO result from the \code{GenTable} output with a gene expression table

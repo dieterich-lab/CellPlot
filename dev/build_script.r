@@ -73,7 +73,7 @@ GOsig <- lapply(list(golub=GO), function (x) {
   GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
 })
 
-golubGO <- Map(CellPlot::mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
+golubGO <- Map(CellPlot::mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.stats = c("padj","log2fc"))
 golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
 save(golubGO, file = "data/golubGO.rdata")
 

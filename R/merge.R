@@ -24,15 +24,14 @@
 mergeGOdeg <- function (
   go, deg, map, 
   go.go = "GO.ID",
-  deg.gene = "gene", deg.p = "pvalue", deg.lfc = "log2FoldChange",
+  deg.gene = "gene", deg.stats = c("pvalue", "log2FoldChange"),
   map.go = "GO", map.gene = "gene",
   as.intersect = FALSE)
 {
   
   if (!go.go %in% colnames(go)) stop("missing go.go")
   if (!deg.gene %in% colnames(deg)) stop("missing deg.gene")
-  if (!deg.p %in% colnames(deg)) stop("missing deg.p")
-  if (!is.null(deg.lfc) && !deg.lfc %in% colnames(deg)) stop("missing deg.lfc")
+  if (!all(deg.stats %in% colnames(deg))) stop("missing deg.stats")
   if (!map.go %in% colnames(map)) stop("missing map.go")
   if (!map.gene %in% colnames(map)) stop("missing map.gene")
   
@@ -43,7 +42,7 @@ mergeGOdeg <- function (
       " map.gene            ", length(unique(map[[map.gene]])), "\n",
       " go.go & map.go      ", length(unique(intersect(go[[go.go]],map[[map.go]]))), "\n",
       " deg.gene & map.gene ", length(unique(intersect(deg[[deg.gene]],map[[map.gene]]))), "\n"
-      )
+  )
   if (as.intersect) {
     isect.go <- intersect(go[[go.go]], map[[map.go]])
     isect.gene <- intersect(deg[[deg.gene]], map[[map.gene]])
@@ -59,17 +58,12 @@ mergeGOdeg <- function (
     deg <- deg[deg[[deg.gene]] %in% map[[map.gene]],]
   }
   
-  x <- merge(map[,c(map.go, map.gene)], deg[,c(deg.gene, deg.p, deg.lfc)],
+  x <- merge(map[,c(map.go, map.gene)], deg[,c(deg.gene, deg.stats)],
              by.x = map.gene, by.y = deg.gene) # all = TRUE?
   x <- merge(go, x, by.x = go.go, by.y = map.go, all.x = TRUE, all.y = FALSE)
   gi <- match(names(go), colnames(x))
   x <- aggregate(x[-gi], by = x[gi], identity)
   if (length(x$pvalCutOff)) x$pvalCutOff <- as.numeric(x$pvalCutOff)
-#   if (!is.null(deg.lfc)) {
-#     xfc <- Map(setNames, x[[deg.lfc]], x[[map.gene]])
-#     x$Upregulated <- lapply(xfc, function (i) { i[i>0] })
-#     x$Downregulated <- lapply(xfc, function (i) { i[i<0] })
-#   }
   return(x)
 }
 
