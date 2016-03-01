@@ -8,10 +8,10 @@ stop("dontrun")
 
 library(devtools)
 library(rmarkdown)
-render('vignettes/CellPlotManual.Rmd')
-render('vignettes/CellPlotManual.Rmd', pdf_document(toc = TRUE, toc_depth = 3))
+render('vignettes/CellPlotManual.Rmd', html_document(toc = TRUE, highlight = "tango"))
+render('vignettes/CellPlotManual.Rmd', pdf_document(toc = TRUE, highlight = "tango"))
 document()
-install(build_vignettes = F)
+install(build_vignettes = T)
 library(CellPlot)
 ?CellPlot
 vignette("CellPlotManual")
@@ -167,9 +167,14 @@ text(0, 1.1, "B", cex=2)
 #par(usr=c(0,1,0,1))
 # still some bugs here:
 arc.plot(x = setNames(x$Enrichment, x$Term), up.list = x$Up, down.list = x$Down,
-         x.mar = c(.9,0.3), x.scale = 1.7, y.mar = c(0, 0), main = "") # x.mar = c(1,0.3), scale = 2
+         x.mar = c(.9,0.3), x.scale = 1.7, y.mar = c(0, 0), main = "", t = 0)
+# x.mar = c(1,0.3), scale = 2
 text(0, 1.1, "C", cex=2)
 dev.off()
+
+# for testing:
+arc.plot(x = setNames(x$Enrichment, x$Term), up.list = x$Up, down.list = x$Down,
+         x.mar = c(.5,0), x.scale = 1, y.mar = c(0, 0), main = "", t = 0)
 
 # x <- golubGO$golub
 # arc.plot( x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated, 
