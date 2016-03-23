@@ -12,11 +12,16 @@
 #' additional columns: 'Upregulated' and 'Downregulated', with the numbers of
 #' up- and down-regulated genes, respectively.
 #' 
-#' @param alpha Significance threshold for enrichment. Terms that are not
+#' @param go.alpha Significance threshold for enrichment. Terms that are not
 #' significantly enriched are still displayed using grey bars. Defaults to 0.05.
 #' 
-#' @param alpha.term Identifies which column contains the p-values of the enrichment
+#' @param gene.alpha Significance threshold for the selection of genes. Defaults to 0.05.
+#' 
+#' @param go.alpha.term Identifies which column contains the p-values of the enrichment
 #' analysis. Defaults to "Elim".
+#' 
+#' @param gene.alpha.term Identifies which column contains the p-values of the gene
+#' differential expression analysis. Defaults to "pvalue".
 #' 
 #' @param min.sig Minimum times a term has to be detected as significantly
 #' enriched across all groups to be displayed in the histogram. Defaults to 1.
@@ -48,9 +53,9 @@
 #' 
 #' @param group.cex Scalar, Character expansion factor for group labels.
 #' 
-#' @param go.selection Character vector of GO IDs that should be displayed.
+#' @param go.selection (Optional) Character vector of GO IDs that should be displayed.
 #' 
-#' @param term.selection Character vector of GO term identifiers that should be displayed.
+#' @param term.selection (Optional) Character vector of GO term identifiers that should be displayed.
 #'
 #' @author 
 #' Robert Sehlke [aut]\cr
@@ -63,18 +68,20 @@
 #'
 
 #' @export
-go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
+go.histogram = function( framelist, go.alpha=0.05, gene.alpha=0.05, go.alpha.term="Elim", gene.alpha.term="pvalue", logfc.term="log2FoldChange", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
                          reorder=T, main="GO enrichment", show.go.id=FALSE, prefix="",show.ttest=F, lab.cex=1, 
                          axis.cex=1, group.cex=NULL, go.selection=NULL, term.selection=NULL) {
   
-  # Auxiliary functions -- put elsewhere?
-    addsig = function( f, sigcolumn, at ) {
+  min.for.ttest = 3
+  
+  # Auxiliary functions
+    addsig = function( f, sigcolumn, at, xcolumn="Upregulated", xmod=1 ) {
       tt = rep("",nrow(f))
       tt[which(f[,sigcolumn] < 0.05)] = "*"
       tt[which(f[,sigcolumn] < 0.01)] = "**"
       tt[which(f[,sigcolumn] < 0.001)] = "***"
       ttsw = strwidth(tt)/1.5
-      text(f[,grep(paste0(prefix,"Upregulated"),colnames(f))] + ttsw, at, tt)
+      text(x= xmod*(f[,grep(paste0(prefix, xcolumn),colnames(f))] + ttsw), y=at, labels=tt)
     }
     
     grep.multi = function(xvec, target) {
@@ -87,6 +94,28 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
   
   # Axis limit (for now, symmetric)
     lim = max( sapply(framelist, function(x) max(x[,paste0(prefix, c("Upregulated","Downregulated"))])  ) )
+  
+  # count up-/and downregulated  
+  for (i in 1:length(framelist)) {
+    framelist[[i]]$Upregulated = framelist[[i]]$Downregulated = 0 #framelist[[i]]$SignificantValues = 0
+    framelist[[i]]$p.up = framelist[[i]]$p.down = NA
+    for (j in 1:nrow(framelist[[i]])) {
+      tmp = framelist[[i]][j,logfc.term][[1]][which(framelist[[i]][j,gene.alpha.term][[1]] <= gene.alpha)]
+      ntmp = length(tmp)
+      framelist[[i]]$Significant[j] = length(tmp)
+      if ( ntmp > 0 ) {
+        #framelist[[i]]$SignificantValues[j] = list(tmp)
+        framelist[[i]]$Upregulated[j] = sum( tmp > 0)
+        framelist[[i]]$Downregulated[j] = sum( tmp < 0)
+        if( ntmp >= min.for.ttest ) {
+          framelist[[i]]$p.up[j] = t.test(tmp, alternative = "greater")$p.value
+          framelist[[i]]$p.down[j] = t.test(tmp, alternative = "less")$p.value
+        }
+      }
+    }
+    framelist[[i]]$p.up = p.adjust(framelist[[i]]$p.up, method = "BH")
+    framelist[[i]]$p.down = p.adjust(framelist[[i]]$p.down, method = "BH")
+  }
   
   # preprocess into one combined data frame
     if (!is.null(go.selection)) {
@@ -134,15 +163,15 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
     }
   
   # apply filters
-    filterframe = (intframe[,grep(paste0("\\.", alpha.term),colnames(intframe))] <= alpha) *  ( intframe[,grep("\\.Significant",colnames(intframe))] >= min.genes )
+    filterframe = (intframe[,grep(paste0("\\.", go.alpha.term),colnames(intframe))] <= go.alpha) *  ( intframe[,grep("\\.Significant$",colnames(intframe))] >= min.genes )
     intframe = intframe[ apply(filterframe,1,function(x) sum(x, na.rm = T)) >= min.sig, ]
-    intframe = intframe[ which(apply( intframe[,grep("\\.Significant",colnames(intframe))], 1, function(x) all( x <= max.genes, na.rm = T) ) ), ]
+    intframe = intframe[ which(apply( intframe[,grep("\\.Significant$",colnames(intframe))], 1, function(x) all( x <= max.genes, na.rm = T) ) ), ]
     # select terms with at least min.sig samples
     
   # cluster by significance status (p[enrich]<=alpha) across groups (other options?)
     if (reorder) { 
-      sf = intframe[,grep(paste0("\\.", alpha.term),colnames(intframe))]
-      sf = sf <= alpha
+      sf = intframe[,grep(paste0("\\.", go.alpha.term),colnames(intframe))]
+      sf = sf <= go.alpha
       sf[is.na(sf)] = FALSE
       sfo = hclust(dist(sf))$order
       intframe = intframe[sfo,] 
@@ -185,9 +214,9 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
            heights = c( m[3],th,barareaheight,1-m[3]-th-barareaheight),
            widths = c( m[2], rep( barplotwidth, nc ), m[4]+ta ) )
   
-  print(m)
-  print(c( m[3],th,barareaheight,1-m[3]-th-barareaheight))
-  print(c( m[2], rep( barplotwidth, nc ), m[4]+ta ))
+  #print(m)
+  #print(c( m[3],th,barareaheight,1-m[3]-th-barareaheight))
+  #print(c( m[2], rep( barplotwidth, nc ), m[4]+ta ))
   
   # Group labels and title
     par(mai=c(0,0,0,0), xpd = T)
@@ -201,11 +230,11 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
   # Cycling through the groups and plotting each in turn
   for (i in 1:length(framelist) ) {
     tmp = intframe[,grep(names(framelist[i]), colnames(intframe))]
-    ts = tmp[,grep(paste0("\\.", alpha.term),colnames(tmp))]
+    ts = tmp[,grep(paste0("\\.", go.alpha.term),colnames(tmp))]
     ucol = rep("darkgrey",length(ts))
     dcol = rep("grey",length(ts))
-    ucol[which(ts <= alpha)] = "coral"
-    dcol[which(ts <= alpha)] = "deepskyblue2"
+    ucol[which(ts <= go.alpha)] = "coral"
+    dcol[which(ts <= go.alpha)] = "deepskyblue2"
     
     
     # left-pointed bars / downregulated
@@ -220,7 +249,7 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
               xlim = c(-lim,0), border=NA, col = dcol, axes=F,add=T)
       
       # adding significance asterisks
-      if(show.ttest) { addsig( tmp, paste0(names(framelist)[i],".p.down.adj"), vline) }
+      if(show.ttest) { addsig( tmp, paste0(names(framelist)[i],".p.down"), vline, xcolumn="Downregulated", xmod=-1) }
     
     
     # right-pointed bars / upregulated, and middle lines
@@ -233,7 +262,8 @@ go.histogram = function( framelist, alpha=0.05, alpha.term="Elim", min.sig=1, mi
       axis(3, at=round( seq(0,lim,length.out = 3)), cex.axis=axis.cex, las=3 )
       lines(c(0,0),c( par('usr')[4], -0.5*vline[1] ) )
       
-      if(show.ttest) { addsig( tmp, paste0(names(framelist)[i],".p.up.adj"), vline) } 
+      if(show.ttest) { addsig( tmp, paste0(names(framelist)[i],".p.up"), vline, xcolumn="Upregulated") } 
+    
     
   }
   
