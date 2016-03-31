@@ -4,8 +4,10 @@
 \alias{go.histogram}
 \title{GO Histogram}
 \usage{
-go.histogram(framelist, alpha = 0.05, alpha.term = "Elim", min.sig = 1,
-  min.genes = 10, max.genes = 100, bar.scale = NULL, reorder = T,
+go.histogram(framelist, go.alpha = 0.05, gene.alpha = 0.05,
+  go.alpha.term = "Elim", gene.alpha.term = "pvalue",
+  logfc.term = "log2FoldChange", min.sig = 1, min.genes = 10,
+  max.genes = 100, bar.scale = NULL, reorder = T,
   main = "GO enrichment", show.go.id = FALSE, prefix = "",
   show.ttest = F, lab.cex = 1, axis.cex = 1, group.cex = NULL,
   go.selection = NULL, term.selection = NULL)
@@ -15,11 +17,16 @@ go.histogram(framelist, alpha = 0.05, alpha.term = "Elim", min.sig = 1,
 additional columns: 'Upregulated' and 'Downregulated', with the numbers of
 up- and down-regulated genes, respectively.}
 
-\item{alpha}{Significance threshold for enrichment. Terms that are not
+\item{go.alpha}{Significance threshold for enrichment. Terms that are not
 significantly enriched are still displayed using grey bars. Defaults to 0.05.}
 
-\item{alpha.term}{Identifies which column contains the p-values of the enrichment
+\item{gene.alpha}{Significance threshold for the selection of genes. Defaults to 0.05.}
+
+\item{go.alpha.term}{Identifies which column contains the p-values of the enrichment
 analysis. Defaults to "Elim".}
+
+\item{gene.alpha.term}{Identifies which column contains the p-values of the gene
+differential expression analysis. Defaults to "pvalue".}
 
 \item{min.sig}{Minimum times a term has to be detected as significantly
 enriched across all groups to be displayed in the histogram. Defaults to 1.}
@@ -51,9 +58,9 @@ and "p.down.adj" (NOTE: make more generic!). Defaults to FALSE.}
 
 \item{group.cex}{Scalar, Character expansion factor for group labels.}
 
-\item{go.selection}{Character vector of GO IDs that should be displayed.}
+\item{go.selection}{(Optional) Character vector of GO IDs that should be displayed.}
 
-\item{term.selection}{Character vector of GO term identifiers that should be displayed.}
+\item{term.selection}{(Optional) Character vector of GO term identifiers that should be displayed.}
 }
 \description{
 Plots a histogram, combining multiple topGO analyses into one figure. Bars

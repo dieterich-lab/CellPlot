@@ -3,5 +3,4 @@
 export(arc.plot)
 export(cell.plot)
 export(go.histogram)
-export(mergeGOdeg)
 export(sym.plot)
