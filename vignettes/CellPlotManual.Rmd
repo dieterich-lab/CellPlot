@@ -118,6 +118,10 @@ arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.do
 
 This section will be updated/integrated in future.
 
+```{r, fig.width=7, fig.height=6}
+print(letters)
+```
+
 ## Visual parameters
 
 Both functions provide a range of parameters to tweak the visual appearance of the plots.
@@ -221,8 +225,8 @@ package.
 ```{r, eval=FALSE}
 # CRAN
 library(parallel)
-library(plyr)
-library(miscset)
+library(dplyr)
+library(stringr)
 # Bioconductor
 library(BiocParallel)
 library(DESeq2)
@@ -233,45 +237,64 @@ library(leukemiasEset)
 
 data(leukemiasEset)
 
-M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
-M <- subset(M, ONTOLOGY == "BP", c("ENSEMBL","GO"))
-M <- M[!duplicated(M),]
+# M <- select(hu6800.db, featureNames(leukemiasEset), c("ENSEMBL","GO"), keytype = "ENSEMBL")
+# M <- subset(M, ONTOLOGY == "BP", c("ENSEMBL","GO"))
+# M <- M[!duplicated(M),]
+# M <- dlply(M, "ENSEMBL", function (x) unique(x$GO))
 
-genes <- dlply(M, "ENSEMBL", function (x) unique(x$GO))
+# M <- as.character(unique(unlist(select(org.Hs.eg.db,featureNames(leukemiasEset),"ENSEMBL",keytype = "ENSEMBL"))))
 
 A <- as(leukemiasEset,"data.frame")
 A <- subset(A, LeukemiaType %in% c("NoL","ALL", "AML", "CLL"))
-s <- subset(A, select = "LeukemiaType")
-s$LeukemiaType <- relevel(factor(as.character(s$LeukemiaType)), "NoL")
-A <- subset(A, select = colnames(A) %in% names(genes))
+As <- subset(A, select = "LeukemiaType")
+As$LeukemiaType <- relevel(factor(as.character(As$LeukemiaType)), "NoL")
+A <- subset(A, select = grepl("^ENS", colnames(A)))
 A <- sapply(A, as.integer)
 A <- t(A)
 
-DEG <- DESeqDataSetFromMatrix(countData = A, colData = s, design = ~ LeukemiaType)
+DEG <- DESeqDataSetFromMatrix(countData = A, colData = As, design = ~ LeukemiaType)
 DEG <- DESeq(DEG, fitType = "mean", parallel = T, BPPARAM = MulticoreParam(20))
-DEG <- lapply(levels(s$LeukemiaType)[-1], function (x) {
-  x <- results(DEG, c("LeukemiaType", x, "NoL"), "LeukemiaType", alpha = .05)
+
+n <- levels(As$LeukemiaType)[-1]
+leukemiasGO <- lapply(setNames(n, n), function (n) {
+  x <- results(DEG, c("LeukemiaType", n, "NoL"), "LeukemiaType", alpha = .05)
   x <- as.data.frame(x)
-  x$gene <- rownames(x)
-  return(x)
-})
-names(DEG) <- levels(s$LeukemiaType)[-1]
-
-GO <- lapply(DEG, function (x) new(
-  "topGOdata", ontology = "BP", description = 'Leukemia', allGenes = setNames(x$pvalue, x$gene), 
-  geneSelectionFun = function (allScore) { allScore <= 0.05 }, annotationFun = annFUN.gene2GO, gene2GO = genes))
-
-GOsig <- mclapply(GO, function (x) {
-  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
-  s <- getSigGroups(x, t)
-  r <- GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
-  r$LogEnrich <- r$Significant / r$Expected
+  x$padj[is.na(x$padj)] <- 1
+  g <- new("topGOdata", ontology = "BP", description = 'Leukemia', 
+           allGenes = setNames(x$padj, rownames(x)), 
+           mapping = "org.Hs.eg.db",
+           geneSelectionFun = function (allScore) { allScore <= 0.05 },
+           annotationFun = annFUN.org, ID = "Ensembl")
+  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test") # test definition
+  s <- getSigGroups(g, t) # run F-test
+  r <- GenTable(g, pvalCutOff = s, topNodes = length(g@graph@nodes)) # return data.frame
+  r$pvalCutOff <- as.numeric(str_replace_all(r$pvalCutOff, "[^0-9e\\-\\.]*", ""))
+  r$LogEnrich <- log2(r$Significant / r$Expected)
+  ga <- genesInTerm(g) # GenesAnnotated | list of genes per go-terms
+  ga <- ga[r$GO.ID] # eliminate missing terms
+  names(ga) <- NULL
+  r$GenesAnnotated <- ga
+  xs <- x[,c("padj", "log2FoldChange")] # significant stats subset
+  xs <- subset(xs, padj < 0.05)
+  r$GenesSignificant <- lapply(r$GenesAnnotated, intersect, rownames(xs)) # extract genes
+  ei.rows <- mclapply(r$GenesSignificant, function (y) {
+    if (length(y)) as.list(xs[y,,drop=FALSE])
+    else as.list(rep(NA_real_, length(xs)))
+  }, mc.cores = 10)
+  ei <- mclapply(names(xs), function(z) {
+    lapply(ei.rows, "[[", z)
+  }, mc.cores = 10)
+  ei <- structure(ei, names = names(xs), row.names = seq(nrow(r)), class = "data.frame")
+  row.names(ei) <- NULL
+  r <- data.frame(r, ei, stringsAsFactors = FALSE, check.names = FALSE)
   return(r)
-}, mc.cores = length(GO))
+})
 
-leukemiasGO <- Map(mergeGOdeg, GOsig, DEG, list(M), map.gene = "ENSEMBL")
-leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
-leukemiasGO <- lapply(leukemiasGO, sort, TRUE, by = "LogEnrich")
+# lapply(GO, function(x) {list(all(r$Annotated == sapply(r$GenesAnnotated, length)),
+#                              all(r$Significant == sapply(r$GenesSignificant, length)))})
+leukemiasGO.ori <- leukemiasGO
+leukemiasGO <- lapply(leukemiasGO, function(x) subset(x, pvalCutOff < 0.1))
+save(leukemiasGO, file = "data/leukemiasGO.rdata")
 ```
 
 # Installation
