@@ -29,7 +29,7 @@
 #' @param tc NA
 #' @param main Plot title.
 #' @param barcol Color of ratio bars.
-#' @param ... tba
+#' @param cex.main Character expansion of the plot title.
 #' 
 #' @author 
 #' Robert Sehlke [aut]\cr
@@ -61,7 +61,8 @@
 #' @export
 arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.bound=NULL, x.ticks=3, x.scale=1, x.gap = .05, x.arc.gap = .3,
                      space=0.1, fixed.scale=NULL, t=0.2, tc="black", main="GO Term Analysis",
-                     barcol = c("deepskyblue2","coral") ) {
+                     barcol = c("deepskyblue2","coral"),
+                     cex.main = 1.3) {
   # code for preciseArc subroutine adapted from plotrix draw.circle function (https://cran.r-project.org/web/packages/plotrix/index.html)
   preciseArc = function (x, y, radius, nv = 100, border = NULL, col = "red", lty = 1, 
                          lwd = 1e-6, startdegree=0, stopdegree=360, width = 0.1, ...) 
@@ -251,6 +252,6 @@ arc.plot = function( x, up.list, down.list, y.mar=c(0,0), x.mar=c(0.5,0), x.boun
   text( x.mar[1]-ygap*gapex*xscale*2, 
         ybound[1]+ygap*xscale*2, 
         main, 
-        cex=ifelse(is.null(fixed.scale),2,fixed.scale*2) )
+        cex=ifelse(is.null(fixed.scale),cex.main,fixed.scale*cex.main) )
   # return(overlapmatrix)
 }
