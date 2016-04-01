@@ -107,10 +107,29 @@ A bargraph showing positive and negative value abundances per category.
 Supply a list of data.frames and compare each table, performing a one
 sided t-test on the absolute `logfc.term` values.
 
+Data is prepared as follows:
+
+```{r}
+y <- lapply(leukemiasGO, function (x) {
+  x$Upregulated <- sapply(x$log2FoldChange, function (z) sum(z>0))
+  x$Downregulated <- sapply(x$log2FoldChange, function (z) sum(z<0))
+  x
+})
+yterms <- unique(unlist(lapply(y, function(x){
+  x <- subset(x, pvalCutOff <= 0.05)
+  x <- x[order(x$LogEnrich),]
+  head(x, 9)$GO.ID
+})))
+```
+
+An the plot generated:
+
 ```{r, fig.width=7, fig.height=6}
-#go.histogram(leukemiasGO, 
-#             go.alpha.term = "pvalCutOff", 
-#             gene.alpha.term = "padj", max.genes = 1e3)
+par(mar = c(0,.5,2.5,8))
+go.histogram(y, go.alpha.term = "pvalCutOff", gene.alpha.term = "padj", 
+             min.genes = 5, max.genes = 1e10, go.selection = yterms, show.ttest = T,
+             main = "GO enrichment\nin leukemia differential gene expression\ncompared to control samples", 
+             axis.cex = 1, lab.cex = 1.5, main.cex = 1.5)
 ```
 
 ## Visual parameters
