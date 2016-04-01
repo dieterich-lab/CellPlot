@@ -8,13 +8,15 @@ Maintainer: Robert Sehlke <rsehlke@age.mpg.de>
 Description: Plots for simultaneous visualisation of functional enrichment and
     expression values.
 Suggests:
-    plyr,
+    stringr,
+    dplyr,
     knitr,
-    miscset,
+    rmarkdown,
+    devtools,
+    BiocParallel,
+    DESeq2,
     topGO,
-    multtest,
-    annotate,
-    hu6800.db
+    annotate
 License: GPL-3
 VignetteBuilder: knitr
 URL: https://github.com/dieterich-lab/CellPlot
