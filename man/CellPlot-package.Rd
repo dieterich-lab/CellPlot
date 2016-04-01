@@ -13,10 +13,10 @@ Plot functions:\cr
 \code{\link{cell.plot}} - A function to plot segmented bars.\cr
 \code{\link{sym.plot}} - A function to plot split bars.\cr
 \code{\link{arc.plot}} - A function to plot category enrichments 
-showing proportions of member directionalities and .\cr\cr
+showing proportions of segment directions and arcs for member intersections.\cr
+\code{\link{go.histogram}} - A function to plot enrichments from multiple samples.\cr
+\cr
 Data objects:\cr
-\code{\link{golubGO}} - A data set with differential gene expression
-and gene ontology analysis derived from \link[multtest]{golub} data.\cr
 \code{\link{leukemiasGO}} - A data set with differential gene expression
 and gene ontology analysis derived from \link[leukemiasEset]{leukemiasEset} data.\cr
 }

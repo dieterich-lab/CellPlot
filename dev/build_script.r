@@ -6,12 +6,11 @@ stop("dontrun")
 ### package
 ########################
 
-library(devtools)
-library(rmarkdown)
-render('vignettes/CellPlotManual.Rmd', html_document(toc = TRUE, highlight = "tango"))
-render('vignettes/CellPlotManual.Rmd', pdf_document(toc = TRUE, highlight = "tango"))
-document()
-install(build_vignettes = T)
+rmarkdown::render('vignettes/CellPlotManual.Rmd', rmarkdown::html_document(toc = TRUE, highlight = "tango"))
+#rmarkdown::render('vignettes/CellPlotManual.Rmd', rmarkdown::pdf_document(toc = TRUE, highlight = "tango"))
+#rmarkdown::render('vignettes/CellPlotManual.Rmd', rmarkdown::pdf_document(toc = TRUE))
+devtools::document()
+devtools::install(build_vignettes = T)
 library(CellPlot)
 ?CellPlot
 vignette("CellPlotManual")

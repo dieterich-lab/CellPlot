@@ -8,7 +8,7 @@ arc.plot(x, up.list, down.list, y.mar = c(0, 0), x.mar = c(0.5, 0),
   x.bound = NULL, x.ticks = 3, x.scale = 1, x.gap = 0.05,
   x.arc.gap = 0.3, space = 0.1, fixed.scale = NULL, t = 0.2,
   tc = "black", main = "GO Term Analysis", barcol = c("deepskyblue2",
-  "coral"))
+  "coral"), cex.main = 1.3)
 }
 \arguments{
 \item{x}{Strictly positive numeric vector.}
@@ -44,7 +44,7 @@ arc.plot(x, up.list, down.list, y.mar = c(0, 0), x.mar = c(0.5, 0),
 
 \item{barcol}{Color of ratio bars.}
 
-\item{...}{tba}
+\item{cex.main}{Character expansion of the plot title.}
 }
 \description{
 Plots a combined barchart for a differential expression experiment GO analysis.
