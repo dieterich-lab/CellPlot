@@ -133,77 +133,73 @@ leukemiasGO <- lapply(leukemiasGO, subset, !is.na(ENSEMBL))
 save(leukemiasGO, file = "data/leukemiasGO.rdata")
 
 ########################
-### paper figure 1 (leukemiasGO version)
+### paper figure 1
 ########################
 
 library(CellPlot)
-library(miscset)
 data(leukemiasGO)
 
-### ERRORS IN ARC-PLOT
-pdf("~/tmp/fig1b.pdf", height = 10) #svg("~/tmp/fig1.svg", height = 10)
-x <- leukemiasGO$CLL
-x <- subset(x, Annotated > 5 & sapply(log2FoldChange, function(i)any(i>0)) & sapply(log2FoldChange, function(i)any(i<0)))
-#& pvalCutOff <= 0.05 
-x$Enrichment <- x$Significant / x$Expected
-x$log2FoldChange <- Map(setNames, x$log2FoldChange, x$ENSEMBL)
-x$Down <- lapply(x$log2FoldChange, function (y) y[y<0])
-x$Up <- lapply(x$log2FoldChange, function (y) y[y>0])
-x <- sort(x, TRUE, "Enrichment")
-x <- head(x, 8)
+x <- subset(leukemiasGO$CLL, pvalCutOff <= 0.05 & Significant > 20)
+x <- x[order(-x$LogEnrich),]
+x$up <- lapply(Map(setNames, x$log2FoldChange, x$GenesSignificant), function (i) { i[i>0] })
+x$dwn <- lapply(Map(setNames, x$log2FoldChange, x$GenesSignificant), function (i) { i[i<0] })
+
+pdf("~/tmp/fig1.pdf", height = 8, width = 7)
 layout(matrix(1:3,nrow=3))
-#par(mar=c(3,0,4,0))
-#par(usr=c(0,1,0,1))
-cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2FoldChange, x.mar = c(0.3,0), y.mar = c(0.2,0.1),
-          space = .2, bar.scale = .7,
-          main = "GO enrichment in CLL/NoL differential gene expression")
+cell.plot(x = setNames(x$LogEnrich, x$Term), 
+          cells = x$log2FoldChange, 
+          main ="GO enrichment (NoT vs CLL) and DEG directionality", 
+          x.mar = c(.37, 0.01), 
+          key.n = 7, 
+          y.mar = c(.3, 0.3), 
+          cex = 1.6, 
+          cell.outer = 3, 
+          bar.scale = .45, 
+          space = .2)
 text(0, 1.1, "A", cex=2)
-#par(usr=c(0,1,0,1))
-sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2FoldChange, x.annotated = x$Annotated,
-         x.mar = c(0.3,0), y.mar = c(0.3, 0.0), cex = 1.6, ticksize = 5, key.lab = "Enrichment")
+sym.plot(x = setNames(x$LogEnrich, x$Term), 
+         cells = x$log2FoldChange, 
+         x.annotated = x$Annotated, 
+         main = "",
+         x.mar = c(.37, 0), y.mar = c(.45,-.5),
+         key.n = 7, 
+         cex = 1.6, 
+         axis.cex = .8, 
+         group.cex = .7)
 text(0, 1.1, "B", cex=2)
-#par(mar=c(3,0,4,0))
-#par(usr=c(0,1,0,1))
-# still some bugs here:
-arc.plot(x = setNames(x$Enrichment, x$Term), up.list = x$Up, down.list = x$Down,
-         x.mar = c(.9,0.3), x.scale = 1.7, y.mar = c(0, 0), main = "", t = 0)
-# x.mar = c(1,0.3), scale = 2
+arc.plot(x = setNames(x$LogEnrich, x$Term), 
+         up.list = x$up, main = "",
+         down.list = x$dwn, x.scale = 2.4,
+         y.mar = c(0),
+         x.mar = c(.9,0),
+         x.bound = 2.5)
 text(0, 1.1, "C", cex=2)
 dev.off()
-
-# for testing:
-arc.plot(x = setNames(x$Enrichment, x$Term), up.list = x$Up, down.list = x$Down,
-         x.mar = c(.5,0), x.scale = 1, y.mar = c(0, 0), main = "", t = 0)
-
-# x <- golubGO$golub
-# arc.plot( x = setNames(x$LogEnrich, x$Term), up.list = x$Upregulated, down.list = x$Downregulated, 
-#           y.mar = c(0, 0.1), x.mar = c(.95, 0.2), x.scale = 2.6,
-#           main = "", x.ticks = 5, x.bound = 2 )
-# text(0, 1.1, "C", cex=2)
 
 ########################
 ### paper figure 2
 ########################
 
 library(CellPlot)
-library(miscset)
 data(leukemiasGO)
 
-pdf("~/tmp/fig2.pdf", height = 5)
 y <- lapply(leukemiasGO, function (x) {
-  x$Enrichment <- x$Significant / x$Expected
   x$Upregulated <- sapply(x$log2FoldChange, function (z) sum(z>0))
   x$Downregulated <- sapply(x$log2FoldChange, function (z) sum(z<0))
   x
 })
 yterms <- unique(unlist(lapply(y, function(x){
-  x <- subset(x, Annotated > 5 & pvalCutOff <= 0.05 & !duplicated(ENSEMBL))
-  head(sort(x, TRUE, "Enrichment"), 20)$GO.ID
+  x <- subset(x, pvalCutOff <= 0.05)
+  x <- x[order(x$LogEnrich),]
+  head(x, 9)$GO.ID
 })))
+
+pdf("~/tmp/fig2.pdf", height = 8, width = 7)
 par(mar = c(0,.5,2.5,8))
-go.histogram(y, alpha.term = "pvalCutOff", min.genes = 0, max.genes = 1e10, go.selection = yterms,
+go.histogram(y, go.alpha.term = "pvalCutOff", gene.alpha.term = "padj", 
+             min.genes = 5, max.genes = 1e10, go.selection = yterms, show.ttest = T,
              main = "GO enrichment\nin leukemia differential gene expression\ncompared to control samples", 
-             axis.cex = 1, lab.cex = 1.5)
+             axis.cex = 1, lab.cex = 1.5, main.cex = 1.5)
 #reorder = F,
 dev.off()
 
