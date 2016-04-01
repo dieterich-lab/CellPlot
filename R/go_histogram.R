@@ -57,6 +57,8 @@
 #' 
 #' @param term.selection (Optional) Character vector of GO term identifiers that should be displayed.
 #'
+#' @param main.cex Title character expansion.
+#'
 #' @author 
 #' Robert Sehlke [aut]\cr
 #' Sven E. Templer [ctb]
@@ -70,7 +72,7 @@
 #' @export
 go.histogram = function( framelist, go.alpha=0.05, gene.alpha=0.05, go.alpha.term="Elim", gene.alpha.term="pvalue", logfc.term="log2FoldChange", min.sig=1, min.genes=10, max.genes=100, bar.scale=NULL,
                          reorder=T, main="GO enrichment", show.go.id=FALSE, prefix="",show.ttest=F, lab.cex=1, 
-                         axis.cex=1, group.cex=NULL, go.selection=NULL, term.selection=NULL) {
+                         axis.cex=1, group.cex=NULL, go.selection=NULL, term.selection=NULL,main.cex=1) {
   
   min.for.ttest = 3
   
@@ -225,7 +227,7 @@ go.histogram = function( framelist, go.alpha=0.05, gene.alpha=0.05, go.alpha.ter
       text(0.5,0.5,names(framelist)[i], cex = ifelse(is.null(group.cex), 1.5, group.cex) )
     }
     plot.new()
-    text(0.5,0.5,main, cex=1)
+    text(0.5,0.5,main, cex=main.cex)
   
   # Cycling through the groups and plotting each in turn
   for (i in 1:length(framelist) ) {
