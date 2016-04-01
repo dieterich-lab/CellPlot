@@ -10,7 +10,7 @@ go.histogram(framelist, go.alpha = 0.05, gene.alpha = 0.05,
   max.genes = 100, bar.scale = NULL, reorder = T,
   main = "GO enrichment", show.go.id = FALSE, prefix = "",
   show.ttest = F, lab.cex = 1, axis.cex = 1, group.cex = NULL,
-  go.selection = NULL, term.selection = NULL)
+  go.selection = NULL, term.selection = NULL, main.cex = 1)
 }
 \arguments{
 \item{framelist}{List of TopGO data frames. The frames have to include two
@@ -61,6 +61,8 @@ and "p.down.adj" (NOTE: make more generic!). Defaults to FALSE.}
 \item{go.selection}{(Optional) Character vector of GO IDs that should be displayed.}
 
 \item{term.selection}{(Optional) Character vector of GO term identifiers that should be displayed.}
+
+\item{main.cex}{Title character expansion.}
 }
 \description{
 Plots a histogram, combining multiple topGO analyses into one figure. Bars
