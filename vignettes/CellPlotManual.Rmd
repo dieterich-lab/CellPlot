@@ -13,54 +13,36 @@ vignette: >
 
 # Description
 
-**CellPlot** is a [GNU R](http://r-project.org) package with plot methods for the
+**CellPlot** is a [GNU R][cran] package with plot methods for the
 integrated visualisation of functional term enrichment and expression data. 
 It can be used to display commonly used gene ontology (GO) term enrichment 
 analysis from differential expression of genes (DEG) studies.
 
-The development platform of this software is hosted on 
-[github](https://github.com/dieterich-lab/CellPlot). 
-In case of any questions, consider using the 
-[issues](https://github.com/dieterich-lab/CellPlot/issues) system.
+The development platform of this software is hosted on [github][cp]. 
+In case of any questions, consider using the [issues][cpissues] system.
 
 # Usage
 
 ## Load package and data
 
 After installing the package (see [Installation](#installation) section), load it in a running
-**R** session:
+**R** session. Example data can be accessed with the `data()` function.
 
 ```{r}
 library(CellPlot)
-library(miscset) # only for examples in the vignette
-```
-
-The example data is available with the commands:
-
-```{r}
-data("golubGO")
 data("leukemiasGO")
 ```
 
-Reduce set of GO terms to display using the base **R** function `subset`:
+## Plot methods
+
+Example to create a subset of the `leukemiasGO` data set tables:
 
 ```{r}
-# select from the golubGO data:
-x <- subset(golubGO$golub, pvalCutOff <= 0.05 & Significant > 5 & !duplicated(PROBEID))
-x$Enrichment <- x$Significant / x$Expected
-x <- sort(x, decreasing = TRUE, by = "Enrichment")
-x <- head(x, 10)
-# select from the leukemiasGO data:
-y <- lapply(leukemiasGO, function (x) {
-  x$Enrichment <- x$Significant / x$Expected
-  x$Upregulated <- sapply(x$log2FoldChange, function (y) sum(y>0))
-  x$Downregulated <- sapply(x$log2FoldChange, function (y) sum(y<0))
-  x
-})
-
+x <- subset(leukemiasGO$CLL, pvalCutOff <= 0.05 & Significant > 20)
+x <- x[order(-x$LogEnrich),]
 ```
 
-## Cell Plot
+### Cell Plot
 
 The function `cell.plot` plots a horizontal barchart of strictly positive values in x. 
 For each entry, a vector of additional values needs to be provided in a list. 
@@ -68,17 +50,20 @@ The additional values are plotted as cells subdividing the length of the corresp
 A typical usage scenario is plotting the enrichment of Gene Ontology terms, 
 with individual cells reflecting the differential regulation of the constituent genes.
 
-```{r, eval=FALSE}
-cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc,
-          main ="GO enrichment on ALL/AML gene expression")
-```
-```{r, fig.width=6, fig.height=8, echo=FALSE}
-cell.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, 
-          cell.bounds = c(-6,6), main ="GO enrichment on ALL/AML gene expression", 
-          x.mar = c(.4, 0), key.n = 7, y.mar = c(.1,0), cex = 1.6, cell.outer = 3, bar.scale = .7, space = .2)
+```{r, fig.width=7, fig.height=8}
+cell.plot(x = setNames(x$LogEnrich, x$Term), 
+          cells = x$log2FoldChange, 
+          main ="GO enrichment (NoT vs CLL)", 
+          x.mar = c(.4, 0), 
+          key.n = 7, 
+          y.mar = c(.1, 0), 
+          cex = 1.6, 
+          cell.outer = 3, 
+          bar.scale = .7, 
+          space = .2)
 ```
 
-## Sym Plot
+### Sym Plot
 
 The function `sym.plot` plots a split barchart, showing the proportions of 
 two mutually exclusive sets in relation to a set containing them both. 
@@ -89,37 +74,43 @@ Associated genes may be provided as a list of vectors of expression values,
 same as for cell.plot(), or as separate vectors x.up and x.down, 
 providing the numbers of up- and down-regulated genes in the same order as x.
 
-```{r, eval=FALSE}
-sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
-         main ="GO enrichment on ALL/AML gene expression")
-```
-```{r, fig.width=6, fig.height=6, echo=FALSE}
-sym.plot(x = setNames(x$Enrichment, x$Term), cells = x$log2fc, x.annotated = x$Annotated, 
-         main = "GO enrichment on ALL/AML gene expression",
-         x.mar = c(.47, 0), key.n = 7, cex = 1.6, axis.cex = 0.8, group.cex = 0.7 ) 
+```{r, fig.width=7, fig.height=6}
+sym.plot(x = setNames(x$LogEnrich, x$Term), 
+         cells = x$log2FoldChange, 
+         x.annotated = x$Annotated, 
+         main = "GO enrichment (NoT vs CLL)",
+         x.mar = c(.47, 0), 
+         key.n = 7, 
+         cex = 1.6, 
+         axis.cex = .8, 
+         group.cex = .7) 
 ```
 
-## Arc Plot
+### Arc Plot
 
-This section will be updated/integrated in future.
+An `arc.plot` represents enrichment bargraphs, showing abundance of positive and negative
+values (e.g. log2 fold change of gene expression comparisons). Units (e.g. gene names) are
+clustered and intersections are indicated by an arc.
 
-```{r, fig.width=7, fig.height=6, eval=FALSE}
-x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] })
-x$deg.down <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i<0] })
-arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.down, x.mar=c(1,0.5))
-```
-```{r, fig.width=7, fig.height=6, echo=FALSE, eval=FALSE}
-x$deg.up <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i>0] })
-x$deg.down <- lapply(Map(setNames, x$deg.log2fc, x$genes), function (i) { i[i<0] })
-arc.plot( x = setNames(x$loge, x$term), up.list = x$deg.up, down.list = x$deg.down, x.mar=c(1,0.5))
+```{r, fig.width=7, fig.height=6}
+x$up <- lapply(Map(setNames, x$log2FoldChange, x$GenesSignificant), function (i) { i[i>0] })
+x$dwn <- lapply(Map(setNames, x$log2FoldChange, x$GenesSignificant), function (i) { i[i<0] })
+arc.plot(x = setNames(x$LogEnrich, x$Term), 
+         up.list = x$up, 
+         down.list = x$dwn, 
+         x.mar = c(.9, .5))
 ```
 
 ## Go Histogram
 
-This section will be updated/integrated in future.
+A bargraph showing positive and negative value abundances per category. 
+Supply a list of data.frames and compare each table, performing a one
+sided t-test on the absolute `logfc.term` values.
 
 ```{r, fig.width=7, fig.height=6}
-print(letters)
+#go.histogram(leukemiasGO, 
+#             go.alpha.term = "pvalCutOff", 
+#             gene.alpha.term = "padj", max.genes = 1e3)
 ```
 
 ## Visual parameters
@@ -153,74 +144,17 @@ package.
 This section provides code and comments on the workflow to perform differential
 expression of genes (DEG) analysis and the gene ontology term (GO) enrichment
 of from the results applied to the `golub` dataset from the 
-[Bioconductor/multtest](http://www.bioconductor.org/packages/release/bioc/html/multtest.html)
+[Bioconductor/leuke](http://www.bioconductor.org/packages/release/bioc/html/multtest.html)
 package.
-
-It contains microarray gene expression data from leukemia study of *Golub* et
-al. (1999), processed as described in *Dudoit* et al. (2002). Differential gene
-expression was performed using a Student t-test to compare the two groups. GO 
-annotation was done with the 
-[Bioconductor/annotate](http://www.bioconductor.org/packages/release/bioc/html/annotate.html)
-and
-[Bioconductor/hu6800.db](http://www.bioconductor.org/packages/release/data/annotation/html/hu6800.db.html)
-packages. 
-
-```{r, eval=FALSE}
-# CRAN
-library(parallel)
-library(plyr)
-library(miscset)
-# Bioconductor
-library(topGO)
-library(annotate)
-library(hu6800.db)
-library(multtest)
-
-data(golub)
-
-A <- split(golub, seq(nrow(golub)))
-DEG <- do.call(rbind, mclapply(A, function(x){
-  t <- t.test(x[as.logical(golub.cl)], x[!as.logical(golub.cl)])
-  t$fc <- t$estimate[1]/t$estimate[2]
-  suppressWarnings(t$fc <- log2(t$fc))
-  data.frame(
-    mean.aml = t$estimate[1],
-    mean.all = t$estimate[2],
-    log2fc  = t$fc,
-    p = t$p.value,
-    row.names = NULL)
-}, mc.cores = 3))
-DEG$padj <- p.adjust(DEG$p)
-DEG <- data.frame(gene = golub.gnames[,3], DEG, stringsAsFactors = F)
-DEG <- subset(DEG, !is.na(log2fc) & !is.na(padj))
-
-M <- select(hu6800.db, DEG$gene, c("PROBEID","GO"))
-genes <- dlply(subset(M, ONTOLOGY == "BP"), "PROBEID", function (x) unique(x$GO))
-DEG <- subset(DEG, gene %in% names(genes))
-
-## topGO object
-GO <- new("topGOdata", ontology = "BP", description = 'golub',
-          allGenes = setNames(DEG$padj, DEG$gene),
-          geneSelectionFun = function (allScore) { allScore <= 0.05 },
-          annotationFun = annFUN.gene2GO, gene2GO = genes)
-
-GOsig <- lapply(list(golub=GO), function (x) {
-  t <- new("elimCount", testStatistic = GOFisherTest, name = "Fisher test")
-  s <- getSigGroups(x, t)
-  GenTable(x, pvalCutOff = s, topNodes = length(x@graph@nodes))
-})
-
-golubGO <- Map(CellPlot::mergeGOdeg, GOsig, list(DEG), list(M), map.gene = "PROBEID", deg.p = "padj",deg.lfc="log2fc")
-golubGO <- lapply(golubGO, subset, !is.na(PROBEID))
-```
 
 ## Dataset `leukemiasGO`
 
 This section provides code and comments on the workflow to perform differential
 expression of genes analysis and the gene ontology term enrichment
 of from the results applied to the `leukemiasEset` dataset from the 
-[Bioconductor/leukemiasEset](http://www.bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html)
-package.
+[Bioconductor/leukemiasEset][bioc_leukemias] package.
+GO annotation was performed with the 
+[Bioconductor/annotate][bioc_annotate]
 
 ```{r, eval=FALSE}
 # CRAN
@@ -232,7 +166,6 @@ library(BiocParallel)
 library(DESeq2)
 library(topGO)
 library(annotate)
-library(hu6800.db)
 library(leukemiasEset)
 
 data(leukemiasEset)
@@ -292,7 +225,7 @@ leukemiasGO <- lapply(setNames(n, n), function (n) {
 
 # lapply(GO, function(x) {list(all(r$Annotated == sapply(r$GenesAnnotated, length)),
 #                              all(r$Significant == sapply(r$GenesSignificant, length)))})
-leukemiasGO.ori <- leukemiasGO
+
 leukemiasGO <- lapply(leukemiasGO, function(x) subset(x, pvalCutOff < 0.1))
 save(leukemiasGO, file = "data/leukemiasGO.rdata")
 ```
@@ -302,28 +235,48 @@ save(leukemiasGO, file = "data/leukemiasGO.rdata")
 ## CellPlot
 
 Install the latest version from the repository on
-[github.com/dieterich-lab/CellPlot](https://github.com/dieterich-lab/CellPlot). 
+[github.com/dieterich-lab/CellPlot][cp]. 
 With the `devtools` package, it is an easy task:
 
-```{r, eval=FALSE}
-install.packages("devtools")
+```{r, eval=TRUE, echo=FALSE}
 library(devtools)
+```
+```{r, eval=FALSE}
 install_github('dieterich-lab/CellPlot', build_vignettes = TRUE)
 ```
 
 ## Dependencies
 
+To install the packages from Bioconducter, use the following steps:
+
 ```{r, eval=FALSE}
 # load bioconductor functions
 source("https://bioconductor.org/biocLite.R")
 
-# install packages for CellPlot
-install.packages("plyr")
+# install packages
+biocLite("BiocParallel")
+biocLite("annotate")
+biocLite("DESeq2")
 biocLite("topGO")
-
-# install packages for vignette, datasets, etc.
-install.packages("miscset")
 biocLite("leukemiasEset")
-biocLite("multtest")
-biocLite("hu6800.db")
 ```
+
+Dependencies from CRAN can be installed via:
+
+```{r, eval = FALSE}
+# install packages
+install.packages(c("stringr","dplyr","knitr","rmarkdown","devtools"))
+```
+
+## Session info
+
+```{r}
+# session info from build machine
+sessionInfo()
+```
+
+[cran]: http://r-project.org
+[cp]: https://github.com/dieterich-lab/CellPlot
+[cpissues]: https://github.com/dieterich-lab/CellPlot/issues
+[bioc_annotate]: http://www.bioconductor.org/packages/release/bioc/html/annotate.html
+[bioc_leukemias]: http://www.bioconductor.org/packages/release/data/experiment/html/leukemiasEset.html
