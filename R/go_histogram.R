@@ -103,6 +103,7 @@ go.histogram = function( framelist, go.alpha=0.05, gene.alpha=0.05, go.alpha.ter
     framelist[[i]]$p.up = framelist[[i]]$p.down = NA
     for (j in 1:nrow(framelist[[i]])) {
       tmp = framelist[[i]][j,logfc.term][[1]][which(framelist[[i]][j,gene.alpha.term][[1]] <= gene.alpha)]
+      tmp <- tmp[!is.infinite(tmp)] # replace by NA, mean, other solution?
       ntmp = length(tmp)
       framelist[[i]]$Significant[j] = length(tmp)
       if ( ntmp > 0 ) {
